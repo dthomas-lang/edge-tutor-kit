@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(if \\(-not \\(Test-Path \"C:\\\\Users\\\\DariusThomas\\\\edge-tutor-kit\\\\.env.local\"\\)\\) { \"ANTHROPIC_API_KEY=your_key_here\" | Out-File -FilePath \"C:\\\\Users\\\\DariusThomas\\\\edge-tutor-kit\\\\.env.local\" -Encoding utf8; Write-Output \"Created .env.local\" } else { Write-Output \".env.local already exists\" })",
+      "PowerShell(cd C:\\\\Users\\\\DariusThomas\\\\edge-tutor-kit; Start-Process powershell -ArgumentList \"-NoExit\", \"-Command\", \"cd 'C:\\\\Users\\\\DariusThomas\\\\edge-tutor-kit'; npm run dev\" -WindowStyle Normal; Start-Sleep -Seconds 6; Start-Process \"http://localhost:3000\")"
+    ]
+  }
+}
