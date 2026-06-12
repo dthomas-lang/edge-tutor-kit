@@ -372,21 +372,31 @@ export default function TutorDashboard() {
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-0 border-b border-slate-800 px-6 shrink-0">
-            {(["output", "visual", "video", "strategy"] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-4 py-3 text-xs font-medium border-b-2 transition-colors ${
-                  activeTab === tab
-                    ? "border-edge-navy text-white"
-                    : "border-transparent text-slate-500 hover:text-slate-300"
-                }`}
-              >
-                {TAB_LABELS[tab]}
-              </button>
-            ))}
-          </div>
+          <div className="flex items-center justify-between border-b border-slate-800 px-6 shrink-0">
+  <div className="flex gap-0">
+    {(["output", "visual", "video", "strategy"] as const).map((tab) => (
+      <button
+        key={tab}
+        onClick={() => setActiveTab(tab)}
+        className={`px-4 py-3 text-xs font-medium border-b-2 transition-colors ${
+          activeTab === tab
+            ? "border-edge-navy text-white"
+            : "border-transparent text-slate-500 hover:text-slate-300"
+        }`}
+      >
+        {TAB_LABELS[tab]}
+      </button>
+    ))}
+  </div>
+  {activeTab === "visual" && (
+    <button
+      onClick={() => setVisualFullscreen(!visualFullscreen)}
+      className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded px-2 py-1 border border-slate-700"
+    >
+      {visualFullscreen ? "Exit Fullscreen ✕" : "Expand ⤢"}
+    </button>
+  )}
+</div>
 
   <div
   className={
@@ -397,12 +407,7 @@ export default function TutorDashboard() {
       : "hidden"
   }
 >
-  <button
-    onClick={() => setVisualFullscreen(!visualFullscreen)}
-    className="absolute top-3 right-3 z-[100] text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded px-2 py-1 border border-slate-700 shadow-lg"
-  >
-    {visualFullscreen ? "Exit Fullscreen ✕" : "Expand ⤢"}
-  </button>
+
 
   {visualToolFor(subject) === "desmos" && <DesmosEmbed />}
   {visualToolFor(subject) === "geogebra" && <GeoGebraEmbed />}
