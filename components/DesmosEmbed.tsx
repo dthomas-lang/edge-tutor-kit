@@ -28,16 +28,14 @@ export default function DesmosEmbed({ readOnly = false }: Props) {
 
     function init() {
       if (!containerRef.current || typeof window.Desmos === "undefined") return;
-      calculator = window.Desmos.GraphingCalculator(containerRef.current, {
-        readOnly,
-      calculator = window.Desmos.GraphingCalculator(containerRef.current, {
-  readOnly,
-  expressions: !readOnly,
-  settingsMenu: !readOnly,
-  zoomButtons: true,
-  border: false,
-      });
-    }
+    calculator = window.Desmos.GraphingCalculator(containerRef.current, {
+    readOnly,
+    expressions: !readOnly,
+    settingsMenu: !readOnly,
+    zoomButtons: true,
+    border: false,
+  });
+}
 
     if (typeof window.Desmos !== "undefined") {
       init();
