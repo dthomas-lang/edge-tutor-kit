@@ -398,11 +398,20 @@ export default function TutorDashboard() {
   )}
 </div>
 
+{visualFullscreen && (
+  <button
+    onClick={() => setVisualFullscreen(false)}
+    className="absolute top-3 right-3 z-[100] text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded px-3 py-1.5 border border-slate-700 shadow-lg"
+  >
+    Exit Fullscreen ✕
+  </button>
+)}
+          
   <div
   className={
     activeTab === "visual"
       ? visualFullscreen
-        ? "fixed inset-0 z-50 bg-slate-950 p-3"
+        ? "fixed inset-0 z-50 bg-slate-950 p-3 relative"
         : "flex-1 p-3 relative"
       : "hidden"
   }
