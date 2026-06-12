@@ -34,7 +34,7 @@ export default function DesmosEmbed({ readOnly = false }: Props) {
         settingsMenu: !readOnly,
         zoomButtons: true,
         border: false,
-        backgroundColor: "#0f172a",
+      
       });
     }
 
