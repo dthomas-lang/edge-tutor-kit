@@ -390,7 +390,7 @@ export default function TutorDashboard() {
   </div>
   {activeTab === "visual" && (
     <button
-      onClick={() => setVisualFullscreen(!visualFullscreen)}
+      onClick={() => setVisualFullscreen(false)}
       className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded px-2 py-1 border border-slate-700"
     >
       {visualFullscreen ? "Exit Fullscreen ✕" : "Expand ⤢"}
