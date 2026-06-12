@@ -35,23 +35,15 @@ export const MiniLessonSchema = z.object({
 });
 
 export const ExitTicketSchema = z.object({
-  questions: z.tuple([
-    z.object({ question: z.string(), answer: z.string() }),
-    z.object({ question: z.string(), answer: z.string() }),
-    z.object({ question: z.string(), answer: z.string() }),
-  ]),
+  questions: z.array(
+    z.object({ question: z.string(), answer: z.string() })
+  ).length(3),
 });
 
 export const HomeworkSchema = z.object({
   skill_focus: z.string(),
   instructions: z.string(),
-  questions: z.tuple([
-    QuestionWithAnswerSchema,
-    QuestionWithAnswerSchema,
-    QuestionWithAnswerSchema,
-    QuestionWithAnswerSchema,
-    QuestionWithAnswerSchema,
-  ]),
+  questions: z.array(QuestionWithAnswerSchema).length(5),
 });
 
 export const ParentUpdateSchema = z.object({
