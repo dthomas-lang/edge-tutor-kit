@@ -399,7 +399,7 @@ export default function TutorDashboard() {
 >
   <button
     onClick={() => setVisualFullscreen(!visualFullscreen)}
-    className="absolute top-2 right-2 z-10 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded px-2 py-1 border border-slate-700"
+    className="absolute top-3 right-3 z-[100] text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded px-2 py-1 border border-slate-700 shadow-lg"
   >
     {visualFullscreen ? "Exit Fullscreen ✕" : "Expand ⤢"}
   </button>
