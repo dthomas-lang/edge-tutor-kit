@@ -72,7 +72,8 @@ export default function TutorDashboard() {
   const [sendLoading, setSendLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<MainTab>("output");
-
+  const [visualFullscreen, setVisualFullscreen] = useState(false);
+  
   function buildVideoQuery(): string {
     if (solveOutput) {
       return `${solveOutput.ksg.show.problem_type} ${solveOutput.subject} tutorial`;
@@ -387,16 +388,30 @@ export default function TutorDashboard() {
             ))}
           </div>
 
-          {/* Visual panel — always mounted so calculator state survives tab switches */}
-          <div className={activeTab === "visual" ? "flex-1 p-3" : "hidden"}>
-            {visualToolFor(subject) === "desmos" && <DesmosEmbed />}
-            {visualToolFor(subject) === "geogebra" && <GeoGebraEmbed />}
-            {visualToolFor(subject) === "none" && (
-              <div className="flex items-center justify-center h-full text-slate-500">
-                <p className="text-sm">No visual tool for ELA sessions.</p>
-              </div>
-            )}
-          </div>
+  <div
+  className={
+    activeTab === "visual"
+      ? visualFullscreen
+        ? "fixed inset-0 z-50 bg-slate-950 p-3"
+        : "flex-1 p-3 relative"
+      : "hidden"
+  }
+>
+  <button
+    onClick={() => setVisualFullscreen(!visualFullscreen)}
+    className="absolute top-2 right-2 z-10 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded px-2 py-1 border border-slate-700"
+  >
+    {visualFullscreen ? "Exit Fullscreen ✕" : "Expand ⤢"}
+  </button>
+
+  {visualToolFor(subject) === "desmos" && <DesmosEmbed />}
+  {visualToolFor(subject) === "geogebra" && <GeoGebraEmbed />}
+  {visualToolFor(subject) === "none" && (
+    <div className="flex items-center justify-center h-full text-slate-500">
+      <p className="text-sm">No visual tool for ELA sessions.</p>
+    </div>
+  )}
+</div>
 
           {/* Video panel — always mounted so selected video survives tab switches */}
           <div className={activeTab === "video" ? "flex-1 overflow-y-auto p-6" : "hidden"}>
