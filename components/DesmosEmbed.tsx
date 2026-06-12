@@ -34,7 +34,12 @@ export default function DesmosEmbed({ readOnly = false }: Props) {
         settingsMenu: !readOnly,
         zoomButtons: true,
         border: false,
-      
+      calculator = window.Desmos.GraphingCalculator(containerRef.current, {
+  readOnly,
+  expressions: !readOnly,
+  settingsMenu: !readOnly,
+  zoomButtons: true,
+  border: false,
       });
     }
 
