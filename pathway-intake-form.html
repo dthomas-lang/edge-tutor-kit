@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pathway Creation Intake — EDGE Education Group</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --navy: #065078;
+    --navy-deep: #043a58;
+    --navy-light: #0a6a9e;
+    --green: #0D6B40;
+    --green-muted: #0d6b4018;
+    --white: #ffffff;
+    --offwhite: #f4f8fb;
+    --gray-100: #eaf1f6;
+    --gray-200: #d0e0ea;
+    --gray-400: #7fa8c0;
+    --gray-600: #4a7a96;
+    --text: #0d1f2d;
+    --text-muted: #4a6a80;
+    --accent-gold: #e8a020;
+    --accent-coral: #e05a38;
+    --ksg-know: #065078;
+    --ksg-show: #0D6B40;
+    --ksg-grow: #7b3fa0;
+    --support: #e8a020;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: var(--offwhite);
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: 80px;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--navy);
+    padding: 24px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 3px solid var(--green);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo-block { display: flex; align-items: center; gap: 14px; }
+  .logo-img { height: 44px; }
+  .logo-text .org { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gray-400); font-weight: 500; }
+  .logo-text .title { font-size: 17px; font-weight: 700; color: var(--white); line-height: 1.2; }
+  .header-badge {
+    background: var(--green);
+    color: var(--white);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 20px;
+  }
+
+  /* PROGRESS BAR */
+  .progress-bar {
+    background: var(--navy-deep);
+    padding: 10px 40px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .progress-steps { display: flex; gap: 6px; flex: 1; }
+  .progress-step {
+    height: 4px;
+    flex: 1;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.2);
+    transition: background 0.3s;
+  }
+  .progress-step.active { background: var(--green); }
+  .progress-step.done { background: var(--gray-400); }
+  .progress-label { font-size: 11px; color: var(--gray-400); white-space: nowrap; }
+
+  /* LAYOUT */
+  .page { max-width: 820px; margin: 0 auto; padding: 40px 24px; }
+
+  /* FORM INTRO */
+  .form-intro {
+    background: var(--white);
+    border-radius: 14px;
+    border-top: 5px solid var(--navy);
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 12px rgba(6,80,120,0.07);
+  }
+  .form-intro h1 { font-size: 22px; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+  .form-intro p { font-size: 13px; color: var(--text-muted); line-height: 1.7; }
+  .form-intro .pipeline-note {
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: var(--green-muted);
+    border-left: 3px solid var(--green);
+    border-radius: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+  .form-intro .pipeline-note strong { color: var(--green); }
+
+  /* SECTION CARD */
+  .section-card {
+    background: var(--white);
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 12px rgba(6,80,120,0.07);
+  }
+  .section-header {
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .section-icon {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .section-title-block .section-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    opacity: 0.75;
+    color: var(--white);
+  }
+  .section-title-block .section-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--white);
+  }
+  .section-body { padding: 24px; }
+
+  /* KSG section colors */
+  .section-identity .section-header { background: var(--navy); }
+  .section-know .section-header { background: var(--ksg-know); }
+  .section-show .section-header { background: var(--ksg-show); }
+  .section-grow .section-header { background: var(--ksg-grow); }
+  .section-support .section-header { background: var(--support); }
+  .section-submit .section-header { background: var(--navy-deep); }
+
+  /* FIELD */
+  .field {
+    margin-bottom: 24px;
+  }
+  .field:last-child { margin-bottom: 0; }
+
+  .field-label {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .required-star { color: var(--accent-coral); font-size: 14px; }
+  .field-hint {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    line-height: 1.6;
+  }
+
+  .field-tag {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 8px;
+    margin-left: auto;
+  }
+  .tag-required { background: #e05a3815; color: var(--accent-coral); }
+  .tag-optional { background: var(--gray-100); color: var(--gray-600); }
+  .tag-ai { background: var(--green-muted); color: var(--green); }
+
+  /* INPUT STYLES */
+  input[type="text"],
+  input[type="date"],
+  textarea,
+  select {
+    width: 100%;
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    color: var(--text);
+    border: 1.5px solid var(--gray-200);
+    border-radius: 8px;
+    padding: 10px 14px;
+    background: var(--offwhite);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+    resize: vertical;
+  }
+  input[type="text"]:focus,
+  input[type="date"]:focus,
+  textarea:focus,
+  select:focus {
+    border-color: var(--navy-light);
+    box-shadow: 0 0 0 3px rgba(10,106,158,0.12);
+    background: var(--white);
+  }
+  textarea { min-height: 90px; }
+
+  /* RADIO + CHECKBOX GROUP */
+  .options-group { display: flex; flex-direction: column; gap: 8px; }
+  .options-group.inline { flex-direction: row; flex-wrap: wrap; gap: 10px; }
+
+  .option-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 14px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    background: var(--offwhite);
+  }
+  .option-item:hover { border-color: var(--navy-light); background: var(--white); }
+  .option-item input[type="radio"],
+  .option-item input[type="checkbox"] {
+    width: auto;
+    margin-top: 2px;
+    accent-color: var(--navy);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .option-text { flex: 1; }
+  .option-label { font-size: 13px; font-weight: 500; color: var(--text); display: block; }
+  .option-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; line-height: 1.4; }
+
+  .options-group.inline .option-item {
+    flex: 0 0 auto;
+    padding: 8px 14px;
+    align-items: center;
+  }
+
+  /* FIELD DIVIDER */
+  .field-divider {
+    border: none;
+    border-top: 1px solid var(--gray-200);
+    margin: 20px 0;
+  }
+
+  /* TWO-COL */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 600px) { .two-col { grid-template-columns: 1fr; } }
+
+  /* MISCONCEPTION BUILDER */
+  .misconception-builder { display: flex; flex-direction: column; gap: 10px; }
+  .misconception-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .misconception-row input { flex: 1; }
+  .misconception-num {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: var(--gray-100);
+    color: var(--gray-600);
+    font-size: 11px;
+    font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  /* SUBMIT SECTION */
+  .submit-btn {
+    display: block;
+    width: 100%;
+    padding: 16px;
+    background: var(--navy);
+    color: var(--white);
+    font-family: 'Poppins', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    letter-spacing: 0.03em;
+    transition: background 0.2s, transform 0.1s;
+    margin-top: 8px;
+  }
+  .submit-btn:hover { background: var(--navy-light); transform: translateY(-1px); }
+  .submit-btn:active { transform: translateY(0); }
+
+  .submit-note {
+    text-align: center;
+    font-size: 11.5px;
+    color: var(--text-muted);
+    margin-top: 12px;
+    line-height: 1.6;
+  }
+
+  /* PIPELINE FLOW MINI */
+  .pipeline-mini {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: var(--gray-100);
+    border-radius: 8px;
+    font-size: 11px;
+    color: var(--text-muted);
+    flex-wrap: wrap;
+  }
+  .pipe-step {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-weight: 600;
+    color: var(--navy);
+    font-size: 10.5px;
+  }
+  .pipe-arrow { color: var(--gray-400); }
+
+  /* CHAR COUNTER */
+  .char-hint { font-size: 10.5px; color: var(--gray-400); text-align: right; margin-top: 4px; }
+
+  /* TOOLTIP */
+  .tooltip {
+    display: inline-block;
+    width: 16px; height: 16px;
+    background: var(--gray-200);
+    color: var(--gray-600);
+    border-radius: 50%;
+    font-size: 10px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 16px;
+    cursor: default;
+    position: relative;
+  }
+  .tooltip:hover::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--navy-deep);
+    color: white;
+    font-size: 10px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+    z-index: 200;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 400;
+    width: 200px;
+    white-space: normal;
+    text-align: left;
+  }
+
+  /* GOOGLE FORMS NOTE */
+  .gf-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 14px;
+    background: #fff9ee;
+    border: 1px solid #f0d080;
+    border-radius: 8px;
+    margin-top: 8px;
+    font-size: 11px;
+    color: #7a5a10;
+    line-height: 1.5;
+  }
+  .gf-note-icon { flex-shrink: 0; margin-top: 1px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-block">
+    <img class="logo-img" src="https://myedgecenter.com/wp-content/uploads/EDGE_Logo.png" alt="EDGE Logo" onerror="this.style.display='none'">
+    <div class="logo-text">
+      <div class="org">EDGE Education Group</div>
+      <div class="title">Pathway Creation Intake Form</div>
+    </div>
+  </div>
+  <div class="header-badge">Internal Staff Only</div>
+</header>
+
+<div class="progress-bar">
+  <div class="progress-steps">
+    <div class="progress-step active"></div>
+    <div class="progress-step active"></div>
+    <div class="progress-step active"></div>
+    <div class="progress-step active"></div>
+    <div class="progress-step active"></div>
+    <div class="progress-step active"></div>
+  </div>
+  <div class="progress-label">6 Sections · ~8 min to complete</div>
+</div>
+
+<div class="page">
+
+  <!-- INTRO -->
+  <div class="form-intro">
+    <h1>New Pathway to Success — Creation Request</h1>
+    <p>This form initiates the Pathway creation pipeline. Your answers directly feed Claude's content generation, the misconception library, and the AI coach scaffolding. The more detail you provide, the more precisely the Pathway reflects EDGE's Know / Show / Grow philosophy.</p>
+    <div class="pipeline-note">
+      <strong>What happens after you submit:</strong> n8n receives this form, passes it to Claude, and generates the full Pathway Package — KSG-structured content, misconception library entries, My Goals prompt, practice problems, and Tutor Kit notes. You'll review the output in Google Sheets before anything moves to Pictory or Coursebox.
+    </div>
+    <div class="pipeline-mini">
+      <span class="pipe-step">This Form</span>
+      <span class="pipe-arrow">→</span>
+      <span class="pipe-step">n8n</span>
+      <span class="pipe-arrow">→</span>
+      <span class="pipe-step">Claude API</span>
+      <span class="pipe-arrow">→</span>
+      <span class="pipe-step">Your Review (Gate 1)</span>
+      <span class="pipe-arrow">→</span>
+      <span class="pipe-step">Pictory AI</span>
+      <span class="pipe-arrow">→</span>
+      <span class="pipe-step">Coursebox</span>
+      <span class="pipe-arrow">→</span>
+      <span class="pipe-step">LearnWorlds</span>
+    </div>
+  </div>
+
+  <!-- SECTION 1: PATHWAY IDENTITY -->
+  <div class="section-card section-identity">
+    <div class="section-header">
+      <div class="section-icon">📋</div>
+      <div class="section-title-block">
+        <div class="section-label">Section 1 of 6</div>
+        <div class="section-name">Pathway Identity</div>
+      </div>
+    </div>
+    <div class="section-body">
+
+      <div class="field">
+        <div class="field-label">
+          Pathway Title / Concept <span class="required-star">*</span>
+          <span class="field-tag tag-required">Required</span>
+        </div>
+        <div class="field-hint">The concept this pathway covers. This becomes the Pathway name: "Pathway to Success: [Your Title]"</div>
+        <input type="text" placeholder="e.g., Solving Linear Equations with One Variable">
+      </div>
+
+      <div class="two-col">
+        <div class="field">
+          <div class="field-label">Subject Area <span class="required-star">*</span></div>
+          <div class="field-hint">Primary subject this concept belongs to</div>
+          <select>
+            <option value="" disabled selected>Select subject…</option>
+            <optgroup label="Mathematics">
+              <option>Algebra 1</option>
+              <option>Algebra 2</option>
+              <option>Geometry</option>
+              <option>Pre-Calculus</option>
+              <option>Statistics</option>
+            </optgroup>
+            <optgroup label="SAT / ACT Prep">
+              <option>ACT Math</option>
+              <option>ACT Reading</option>
+              <option>ACT English</option>
+              <option>ACT Science</option>
+              <option>SAT Math</option>
+              <option>SAT Reading & Writing</option>
+            </optgroup>
+            <optgroup label="Other">
+              <option>Other (specify in notes)</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <div class="field">
+          <div class="field-label">
+            GSE Standard(s) <span class="required-star">*</span>
+            <span class="tooltip" data-tip="Georgia Standards of Excellence — e.g., MGSE9-12.A.REI.3. Multiple standards separated by commas.">?</span>
+          </div>
+          <div class="field-hint">Standard(s) this pathway addresses — used for tagging across Supabase and LearnWorlds</div>
+          <input type="text" placeholder="e.g., MGSE9-12.A.REI.3, MGSE9-12.A.REI.4">
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Target Audience <span class="required-star">*</span></div>
+        <div class="field-hint">Select all grade levels this pathway is designed for</div>
+        <div class="options-group inline">
+          <label class="option-item"><input type="checkbox" name="audience"> <span class="option-label">8th Grade</span></label>
+          <label class="option-item"><input type="checkbox" name="audience"> <span class="option-label">9th Grade</span></label>
+          <label class="option-item"><input type="checkbox" name="audience"> <span class="option-label">10th Grade</span></label>
+          <label class="option-item"><input type="checkbox" name="audience"> <span class="option-label">11th Grade</span></label>
+          <label class="option-item"><input type="checkbox" name="audience"> <span class="option-label">12th Grade</span></label>
+          <label class="option-item"><input type="checkbox" name="audience"> <span class="option-label">SAT/ACT Prep</span></label>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Estimated Pathway Length <span class="required-star">*</span></div>
+        <div class="field-hint">How long should a student expect to spend on this full pathway (Know + Show + Grow)?</div>
+        <div class="options-group inline">
+          <label class="option-item"><input type="radio" name="length"> <span class="option-label">30 min</span></label>
+          <label class="option-item"><input type="radio" name="length"> <span class="option-label">45 min</span></label>
+          <label class="option-item"><input type="radio" name="length"> <span class="option-label">60 min</span></label>
+          <label class="option-item"><input type="radio" name="length"> <span class="option-label">90 min</span></label>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SECTION 2: KNOW STAGE -->
+  <div class="section-card section-know">
+    <div class="section-header">
+      <div class="section-icon">🧠</div>
+      <div class="section-title-block">
+        <div class="section-label">Section 2 of 6 · KSG Stage</div>
+        <div class="section-name">KNOW — Readiness Activation</div>
+      </div>
+    </div>
+    <div class="section-body">
+
+      <div class="field">
+        <div class="field-label">
+          Prerequisite Concepts <span class="required-star">*</span>
+          <span class="tooltip" data-tip="These become the prerequisite check questions in the KNOW stage. Be specific — Claude will write 2-3 check questions per concept.">?</span>
+        </div>
+        <div class="field-hint">List 2–4 concepts a student must already understand before this pathway begins. One per line.</div>
+        <textarea placeholder="e.g.,&#10;Understanding of variables and expressions&#10;Ability to combine like terms&#10;Order of operations (PEMDAS)"></textarea>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Key Vocabulary to Activate <span class="required-star">*</span></div>
+        <div class="field-hint">Terms Claude should define and activate at the start of the KNOW stage. One per line.</div>
+        <textarea placeholder="e.g.,&#10;Equation&#10;Variable&#10;Coefficient&#10;Inverse operation&#10;Solution"></textarea>
+      </div>
+
+      <div class="field">
+        <div class="field-label">
+          Non-Cognitive Focus <span class="required-star">*</span>
+          <span class="tooltip" data-tip="Select up to 2. These shape the mindset activation language Claude generates and the AI coach's framing throughout the pathway.">?</span>
+        </div>
+        <div class="field-hint">What mindset posture does this concept most demand? Select up to 2.</div>
+        <div class="options-group">
+          <label class="option-item">
+            <input type="checkbox" name="noncog">
+            <span class="option-text">
+              <span class="option-label">Math / Test Anxiety</span>
+              <span class="option-desc">This concept tends to trigger freeze responses — coach should de-escalate before content begins</span>
+            </span>
+          </label>
+          <label class="option-item">
+            <input type="checkbox" name="noncog">
+            <span class="option-text">
+              <span class="option-label">Persistence / Resilience</span>
+              <span class="option-desc">Students tend to give up quickly on this type — coach should normalize struggle and reinforce stamina</span>
+            </span>
+          </label>
+          <label class="option-item">
+            <input type="checkbox" name="noncog">
+            <span class="option-text">
+              <span class="option-label">Self-Efficacy / Confidence</span>
+              <span class="option-desc">Students often doubt their ability with this concept — coach should build belief before and during</span>
+            </span>
+          </label>
+          <label class="option-item">
+            <input type="checkbox" name="noncog">
+            <span class="option-text">
+              <span class="option-label">Growth Mindset</span>
+              <span class="option-desc">Students attribute success/failure to fixed ability — coach should reinforce effort and strategy</span>
+            </span>
+          </label>
+          <label class="option-item">
+            <input type="checkbox" name="noncog">
+            <span class="option-text">
+              <span class="option-label">Executive Function</span>
+              <span class="option-desc">This concept requires multi-step planning — coach should scaffold organizational strategies</span>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label">My Goals Prompt Orientation <span class="required-star">*</span></div>
+        <div class="field-hint">What type of success definition should Claude emphasize when writing the My Goals prompt for this concept?</div>
+        <div class="options-group">
+          <label class="option-item">
+            <input type="radio" name="goals">
+            <span class="option-text">
+              <span class="option-label">Understanding-focused</span>
+              <span class="option-desc">"I want to understand this well enough to explain it or teach it to someone"</span>
+            </span>
+          </label>
+          <label class="option-item">
+            <input type="radio" name="goals">
+            <span class="option-text">
+              <span class="option-label">Confidence-focused</span>
+              <span class="option-desc">"I want to feel less anxious or frozen when I see this type of problem"</span>
+            </span>
+          </label>
+          <label class="option-item">
+            <input type="radio" name="goals">
+            <span class="option-text">
+              <span class="option-label">Performance-focused</span>
+              <span class="option-desc">"I want to hit a specific score or solve a target number of problems correctly"</span>
+            </span>
+          </label>
+          <label class="option-item">
+            <input type="radio" name="goals">
+            <span class="option-text">
+              <span class="option-label">Growth-focused</span>
+              <span class="option-desc">"I want to do better than last time, whatever that means for me"</span>
+            </span>
+          </label>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SECTION 3: SHOW STAGE -->
+  <div class="section-card section-show">
+    <div class="section-header">
+      <div class="section-icon">🎬</div>
+      <div class="section-title-block">
+        <div class="section-label">Section 3 of 6 · KSG Stage</div>
+        <div class="section-name">SHOW — Guided Demonstration</div>
+      </div>
+    </div>
+    <div class="section-body">
+
+      <div class="field">
+        <div class="field-label">
+          Worked Example Scenario <span class="required-star">*</span>
+          <span class="tooltip" data-tip="Claude will write the full narrated walkthrough based on what you describe here. Be specific about the type of problem — the more concrete, the better the Pictory script.">?</span>
+        </div>
+        <div class="field-hint">Describe the specific problem or scenario Claude should use as the SHOW stage worked example. Include the actual problem if you have one in mind.</div>
+        <textarea placeholder="e.g., A two-step linear equation where the variable is on one side: 3x + 7 = 22. Walk through isolating the variable using inverse operations, checking the solution, and explaining why each step works."></textarea>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Computation Tool Needed</div>
+        <div class="field-hint">Will this SHOW stage demonstration require Desmos or Wolfram Alpha support in the AI coach widget?</div>
+        <div class="options-group inline">
+          <label class="option-item"><input type="radio" name="tools"> <span class="option-label">Desmos (graphing)</span></label>
+          <label class="option-item"><input type="radio" name="tools"> <span class="option-label">Wolfram Alpha (computation)</span></label>
+          <label class="option-item"><input type="radio" name="tools"> <span class="option-label">Both</span></label>
+          <label class="option-item"><input type="radio" name="tools"> <span class="option-label">Neither</span></label>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Visual Representation Needed</div>
+        <div class="field-hint">What visual formats should Claude incorporate into the SHOW stage? Select all that apply.</div>
+        <div class="options-group inline">
+          <label class="option-item"><input type="checkbox" name="visuals"> <span class="option-label">Graph / coordinate plane</span></label>
+          <label class="option-item"><input type="checkbox" name="visuals"> <span class="option-label">Table of values</span></label>
+          <label class="option-item"><input type="checkbox" name="visuals"> <span class="option-label">Diagram / model</span></label>
+          <label class="option-item"><input type="checkbox" name="visuals"> <span class="option-label">Number line</span></label>
+          <label class="option-item"><input type="checkbox" name="visuals"> <span class="option-label">Step-by-step annotation</span></label>
+          <label class="option-item"><input type="checkbox" name="visuals"> <span class="option-label">None needed</span></label>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label">
+          Boclips Video Search Terms
+          <span class="field-tag tag-optional">Optional</span>
+        </div>
+        <div class="field-hint">Suggest 2–3 search terms for Boclips video curation. Claude will also generate suggestions — yours take priority.</div>
+        <input type="text" placeholder="e.g., linear equations, solving for x, inverse operations">
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SECTION 4: GROW STAGE -->
+  <div class="section-card section-grow">
+    <div class="section-header">
+      <div class="section-icon">🌱</div>
+      <div class="section-title-block">
+        <div class="section-label">Section 4 of 6 · KSG Stage</div>
+        <div class="section-name">GROW — Transfer & Stretch</div>
+      </div>
+    </div>
+    <div class="section-body">
+
+      <div class="two-col">
+        <div class="field">
+          <div class="field-label">Number of Practice Problems <span class="required-star">*</span></div>
+          <div class="options-group">
+            <label class="option-item"><input type="radio" name="prob-count"> <span class="option-label">3 problems</span></label>
+            <label class="option-item"><input type="radio" name="prob-count"> <span class="option-label">5 problems</span></label>
+            <label class="option-item"><input type="radio" name="prob-count"> <span class="option-label">7 problems</span></label>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Difficulty Progression <span class="required-star">*</span></div>
+          <div class="options-group">
+            <label class="option-item">
+              <input type="radio" name="difficulty">
+              <span class="option-text">
+                <span class="option-label">Scaffolded</span>
+                <span class="option-desc">Easy → Medium → Hard</span>
+              </span>
+            </label>
+            <label class="option-item">
+              <input type="radio" name="difficulty">
+              <span class="option-text">
+                <span class="option-label">Consistent</span>
+                <span class="option-desc">All at the same challenge level</span>
+              </span>
+            </label>
+            <label class="option-item">
+              <input type="radio" name="difficulty">
+              <span class="option-text">
+                <span class="option-label">Stretch</span>
+                <span class="option-desc">Medium → Hard → Challenge</span>
+              </span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label">
+          Real-World Transfer Context
+          <span class="field-tag tag-optional">Optional</span>
+        </div>
+        <div class="field-hint">What real-world setting should practice problems be grounded in? Grounds the GROW stage in relevance. Leave blank and Claude will choose.</div>
+        <input type="text" placeholder="e.g., sports statistics, financial literacy, architecture, cooking measurements, travel planning">
+      </div>
+
+      <div class="field">
+        <div class="field-label">
+          Hint Structure for AI Coach
+          <span class="field-tag tag-ai">Claude generates</span>
+        </div>
+        <div class="field-hint">Claude will generate a 3-level graduated hint sequence for each practice problem. Do you want hints to prioritize:</div>
+        <div class="options-group">
+          <label class="option-item">
+            <input type="radio" name="hints">
+            <span class="option-text">
+              <span class="option-label">Process hints</span>
+              <span class="option-desc">"What operation should you undo first?" — guides procedure</span>
+            </span>
+          </label>
+          <label class="option-item">
+            <input type="radio" name="hints">
+            <span class="option-text">
+              <span class="option-label">Conceptual hints</span>
+              <span class="option-desc">"What does it mean to isolate the variable?" — guides understanding</span>
+            </span>
+          </label>
+          <label class="option-item">
+            <input type="radio" name="hints">
+            <span class="option-text">
+              <span class="option-label">Mixed (process + conceptual)</span>
+              <span class="option-desc">Hint 1 conceptual → Hint 2 process → Hint 3 worked step</span>
+            </span>
+          </label>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SECTION 5: SUPPORT LAYER -->
+  <div class="section-card section-support">
+    <div class="section-header">
+      <div class="section-icon">🧩</div>
+      <div class="section-title-block">
+        <div class="section-label">Section 5 of 6</div>
+        <div class="section-name">Support Layer — Misconceptions & Coach Intelligence</div>
+      </div>
+    </div>
+    <div class="section-body">
+
+      <div class="field">
+        <div class="field-label">
+          Known Misconceptions
+          <span class="field-tag tag-optional">Optional — but high value</span>
+        </div>
+        <div class="field-hint">List misconceptions you already know students make with this concept. Claude will generate 4–5 additional entries, but yours are seeded first into the library and weighted highest. One per line.</div>
+        <div class="misconception-builder">
+          <div class="misconception-row"><span class="misconception-num">1</span><input type="text" placeholder="e.g., Students subtract instead of divide when moving a coefficient"></div>
+          <div class="misconception-row"><span class="misconception-num">2</span><input type="text" placeholder="e.g., Students forget to apply the operation to both sides"></div>
+          <div class="misconception-row"><span class="misconception-num">3</span><input type="text" placeholder="e.g., Students confuse the sign when moving a term across the equals sign"></div>
+        </div>
+        <div class="gf-note">
+          <span class="gf-note-icon">💡</span>
+          <span>These entries go directly into the <strong>misconceptions</strong> Supabase table. The more specific you are about the wrong answer pattern, the more precisely the AI coach can match and name it when a student makes that error.</span>
+        </div>
+      </div>
+
+      <hr class="field-divider">
+
+      <div class="field">
+        <div class="field-label">
+          IEP / 504 Coaching Adjustments
+          <span class="field-tag tag-optional">Optional</span>
+        </div>
+        <div class="field-hint">Are there specific accommodations the AI coach should apply for this concept? This supplements the student-level IEP flag — use this for concept-specific adjustments.</div>
+        <textarea placeholder="e.g., Break every step into its own labeled action. Avoid time-pressure language in the GROW stage. Use concrete objects (coins, blocks) as metaphors for variables."></textarea>
+      </div>
+
+      <div class="field">
+        <div class="field-label">
+          Tutor Kit Notes
+          <span class="field-tag tag-optional">Optional</span>
+        </div>
+        <div class="field-hint">What should Dr. Thomas know walking into a session on this concept? These become the "recommended_focus" field in the tutor_session_briefs table.</div>
+        <textarea placeholder="e.g., Students who struggle here often have a gap in understanding negative numbers, not equations. Check integer fluency early. Watch for students who can execute the procedure but can't explain why each step works — that's the real tell."></textarea>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SECTION 6: SUBMISSION -->
+  <div class="section-card section-submit">
+    <div class="section-header">
+      <div class="section-icon">🚀</div>
+      <div class="section-title-block">
+        <div class="section-label">Section 6 of 6</div>
+        <div class="section-name">Submission Details</div>
+      </div>
+    </div>
+    <div class="section-body">
+
+      <div class="two-col">
+        <div class="field">
+          <div class="field-label">Priority Level <span class="required-star">*</span></div>
+          <div class="options-group">
+            <label class="option-item">
+              <input type="radio" name="priority">
+              <span class="option-text">
+                <span class="option-label">Urgent</span>
+                <span class="option-desc">Needed within 1 week</span>
+              </span>
+            </label>
+            <label class="option-item">
+              <input type="radio" name="priority">
+              <span class="option-text">
+                <span class="option-label">Standard</span>
+                <span class="option-desc">2–3 week timeline</span>
+              </span>
+            </label>
+            <label class="option-item">
+              <input type="radio" name="priority">
+              <span class="option-text">
+                <span class="option-label">Planning Ahead</span>
+                <span class="option-desc">1+ month, no rush</span>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Target Completion Date</div>
+          <div class="field-hint">When do you need this pathway live in LearnWorlds?</div>
+          <input type="date">
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label">
+          Additional Context for Claude
+          <span class="field-tag tag-optional">Optional</span>
+        </div>
+        <div class="field-hint">Anything else that should inform how Claude builds this pathway — tone, connections to prior pathways, upcoming test dates, student context.</div>
+        <textarea placeholder="e.g., This pathway will be the first one students encounter in the Algebra 1 sequence. Assume they have never formally studied equations. The cohort taking this has high math anxiety — keep the KNOW stage especially warm and unhurried."></textarea>
+      </div>
+
+      <button class="submit-btn" type="button">Submit Pathway Request →</button>
+      <p class="submit-note">
+        Submitting triggers the n8n pipeline immediately. You will receive a notification when the Claude-generated Pathway Package is ready for your Gate 1 review in Google Sheets.<br>
+        Average generation time: 2–4 minutes.
+      </p>
+
+    </div>
+  </div>
+
+</div><!-- /page -->
+</body>
+</html>
