@@ -17,6 +17,9 @@ Difficulty level: ${skill.difficulty}
 Calculator allowed: ${skill.calculatorAllowed ? "Yes" : "No"}`;
 }
 
+const MATH_FORMAT_INSTRUCTION =
+  "Formatting: wrap every mathematical expression, equation, or variable in single-dollar LaTeX delimiters inline within your sentences (e.g. \"Solve $3x^2 - 5x - 2 = 0$ for $x$.\"). Use LaTeX commands for symbols (\\sqrt{}, \\frac{}{}, ^{}, _{}, \\leq, etc.) rather than unicode or plain-text approximations. Do not wrap plain prose in dollar signs.";
+
 export function buildPrompt(
   capability: Capability,
   skill: Skill,
@@ -37,7 +40,9 @@ Provide:
 - 3-4 common misconceptions students have about this skill
 - 4-5 tutor talking points — key things to emphasize during instruction
 
-Be direct and practical. Tutors use this mid-session under time pressure.`;
+Be direct and practical. Tutors use this mid-session under time pressure.
+
+${MATH_FORMAT_INSTRUCTION}`;
 
     case "workedExample":
       return `You are an expert ${subject} tutor. Generate one worked example problem for the following skill.
@@ -51,7 +56,9 @@ Provide:
 - The final answer
 - A brief tutor note highlighting the key insight or common trap
 
-Write steps as if speaking to a student: clear, numbered, showing work.`;
+Write steps as if speaking to a student: clear, numbered, showing work.
+
+${MATH_FORMAT_INSTRUCTION}`;
 
     case "practiceSet":
       return `You are an expert ${subject} tutor. Generate a practice set for the following skill.
@@ -63,7 +70,9 @@ Generate 2 easy, 3 medium, and 2 hard practice problems. Each problem needs:
 - The correct answer
 - A brief explanation of how to solve it
 
-Scale difficulty appropriately. Hard problems should reflect actual ${subject} challenge level.`;
+Scale difficulty appropriately. Hard problems should reflect actual ${subject} challenge level.
+
+${MATH_FORMAT_INSTRUCTION}`;
 
     case "miniLesson":
       return `You are an expert ${subject} tutor. Design a focused mini-lesson for the following skill.
@@ -78,7 +87,9 @@ Provide:
 - A check-for-understanding question or activity
 - A closing statement that reinforces the key takeaway
 
-Keep it tight and tutor-led. This is for one-on-one sessions.`;
+Keep it tight and tutor-led. This is for one-on-one sessions.
+
+${MATH_FORMAT_INSTRUCTION}`;
 
     case "exitTicket":
       return `You are an expert ${subject} tutor. Create a 3-question exit ticket for the following skill.
@@ -90,7 +101,9 @@ Each question should:
 - Test whether the student grasped the key concept
 - Have a clear, unambiguous answer
 
-Use realistic ${subject} question formats. Vary the question types if possible.`;
+Use realistic ${subject} question formats. Vary the question types if possible.
+
+${MATH_FORMAT_INSTRUCTION}`;
 
     case "homework":
       return `You are an expert ${subject} tutor. Create a 5-question homework assignment for the following skill.
@@ -103,7 +116,9 @@ Provide:
 - Clear instructions for the student
 - 5 practice problems with answers and explanations
 
-Problems should progress in difficulty. Format questions so a student can work independently.`;
+Problems should progress in difficulty. Format questions so a student can work independently.
+
+${MATH_FORMAT_INSTRUCTION}`;
 
     case "parentUpdate":
       return `You are an expert ${subject} tutor writing a brief parent update after a tutoring session.
@@ -182,5 +197,7 @@ SHOW — Identify the problem type, then walk through the solution step by step.
 
 GROW — Summarize the single most important conceptual takeaway, list 2-3 connections to related topics the student will encounter, and write one harder follow-up problem as a challenge.
 
-Be precise. Every step in SHOW must be mathematically correct and completeable by a student.`;
+Be precise. Every step in SHOW must be mathematically correct and completeable by a student.
+
+${MATH_FORMAT_INSTRUCTION}`;
 }

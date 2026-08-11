@@ -10,8 +10,10 @@
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.81",
-    "@react-pdf/renderer": "^4.5.1",
+    "@react-pdf/renderer": "^4.6.0",
+    "@types/katex": "^0.16.8",
     "ai": "^6.0.196",
+    "katex": "^0.18.4",
     "next": "16.2.7",
     "react": "19.2.4",
     "react-dom": "19.2.4",

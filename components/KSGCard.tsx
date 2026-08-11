@@ -1,6 +1,7 @@
 "use client";
 
 import type { KSGOutput } from "@/lib/schemas";
+import MathText from "@/components/MathText";
 
 type Props = {
   problem: string;
@@ -36,7 +37,7 @@ function BulletList({ items }: { items: string[] }) {
       {items.map((item, i) => (
         <li key={i} className="flex gap-2 text-sm text-slate-300">
           <span className="text-slate-600 shrink-0 mt-0.5">—</span>
-          <span>{item}</span>
+          <MathText text={item} />
         </li>
       ))}
     </ul>
@@ -50,7 +51,9 @@ export default function KSGCard({ problem, subject, ksg, wolframVerified }: Prop
       <div className="bg-slate-800 px-4 py-3 border-b border-slate-700 flex items-start justify-between gap-3">
         <div>
           <p className="text-xs text-slate-500 mb-0.5">{subject}</p>
-          <p className="text-sm font-semibold text-slate-100 leading-snug">{problem}</p>
+          <p className="text-sm font-semibold text-slate-100 leading-snug">
+            <MathText text={problem} />
+          </p>
         </div>
         {wolframVerified && (
           <span className="shrink-0 inline-flex items-center gap-1.5 text-xs font-medium text-edge-green bg-green-950 border border-green-800 rounded-full px-2.5 py-1">
@@ -71,14 +74,14 @@ export default function KSGCard({ problem, subject, ksg, wolframVerified }: Prop
             {ksg.know.key_vocabulary.map((v, i) => (
               <div key={i} className="flex gap-2 text-sm">
                 <span className="font-semibold text-white shrink-0">{v.term}:</span>
-                <span className="text-slate-300">{v.definition}</span>
+                <span className="text-slate-300"><MathText text={v.definition} /></span>
               </div>
             ))}
           </div>
         </Row>
         <Row label="Watch Out For">
           <p className="text-sm text-amber-300 bg-amber-950/40 border border-amber-900/50 rounded px-3 py-2">
-            {ksg.know.watch_out_for}
+            <MathText text={ksg.know.watch_out_for} />
           </p>
         </Row>
       </div>
@@ -87,7 +90,7 @@ export default function KSGCard({ problem, subject, ksg, wolframVerified }: Prop
       <SectionHeader label="Show" color="bg-edge-navy" />
       <div className="px-4 py-4 border-b border-slate-800">
         <Row label="Problem Type">
-          <p className="text-sm text-slate-300">{ksg.show.problem_type}</p>
+          <p className="text-sm text-slate-300"><MathText text={ksg.show.problem_type} /></p>
         </Row>
         <Row label="Steps">
           <div className="flex flex-col gap-4">
@@ -97,11 +100,17 @@ export default function KSGCard({ problem, subject, ksg, wolframVerified }: Prop
                   <span className="text-xs font-bold text-edge-navy bg-white rounded-full w-5 h-5 flex items-center justify-center shrink-0">
                     {i + 1}
                   </span>
-                  <span className="text-xs font-semibold text-slate-200">{s.step}</span>
+                  <span className="text-xs font-semibold text-slate-200">
+                    <MathText text={s.step} />
+                  </span>
                 </div>
                 <div className="px-3 py-2 flex flex-col gap-2">
-                  <p className="text-sm font-mono text-cyan-300 whitespace-pre-line">{s.work}</p>
-                  <p className="text-xs text-slate-400 italic">{s.why}</p>
+                  <p className="text-sm font-mono text-cyan-300 whitespace-pre-line">
+                    <MathText text={s.work} />
+                  </p>
+                  <p className="text-xs text-slate-400 italic">
+                    <MathText text={s.why} />
+                  </p>
                 </div>
               </div>
             ))}
@@ -111,7 +120,9 @@ export default function KSGCard({ problem, subject, ksg, wolframVerified }: Prop
           <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
             Final Answer
           </p>
-          <p className="text-base font-bold text-white">{ksg.show.final_answer}</p>
+          <p className="text-base font-bold text-white">
+            <MathText text={ksg.show.final_answer} />
+          </p>
         </div>
       </div>
 
@@ -119,14 +130,14 @@ export default function KSGCard({ problem, subject, ksg, wolframVerified }: Prop
       <SectionHeader label="Grow" color="bg-edge-green" />
       <div className="px-4 py-4">
         <Row label="Key Takeaway">
-          <p className="text-sm text-slate-300">{ksg.grow.key_takeaway}</p>
+          <p className="text-sm text-slate-300"><MathText text={ksg.grow.key_takeaway} /></p>
         </Row>
         <Row label="Connections">
           <BulletList items={ksg.grow.connections} />
         </Row>
         <Row label="Next Challenge">
           <div className="bg-slate-800 border border-slate-700 rounded px-3 py-2.5">
-            <p className="text-sm text-slate-200">{ksg.grow.next_challenge}</p>
+            <p className="text-sm text-slate-200"><MathText text={ksg.grow.next_challenge} /></p>
           </div>
         </Row>
       </div>

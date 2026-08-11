@@ -30,7 +30,7 @@ export default function SkillSearch({ onSelect, selected, selectedSubject }: Pro
       const matchesQuery =
         !q ||
         s.name.toLowerCase().includes(q) ||
-        s.tags.some((t) => t.includes(q));
+        s.tags.some((t) => t.toLowerCase().includes(q));
       return matchesSubject && matchesQuery;
     });
   }, [query, selectedSubject]);

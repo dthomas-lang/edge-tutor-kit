@@ -65,11 +65,14 @@ export default function TutorDashboard() {
   const [selectedVideo, setSelectedVideo] = useState<{ videoId: string; title: string } | null>(null);
   const [builtPacket, setBuiltPacket] = useState<{ base64: string; filename: string } | null>(null);
   const [packetSent, setPacketSent] = useState(false);
+  const [sessionLogged, setSessionLogged] = useState(false);
+  const [sessionLogError, setSessionLogError] = useState<string | null>(null);
 
   const [solveLoading, setSolveLoading] = useState(false);
   const [generateLoading, setGenerateLoading] = useState(false);
   const [packetLoading, setPacketLoading] = useState(false);
   const [sendLoading, setSendLoading] = useState(false);
+  const [sessionLogLoading, setSessionLogLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<MainTab>("output");
   const [visualFullscreen, setVisualFullscreen] = useState(false);
@@ -91,6 +94,8 @@ export default function TutorDashboard() {
     setSolveOutput(null);
     setSelectedVideo(null);
     setError(null);
+    setSessionLogged(false);
+    setSessionLogError(null);
   }
 
   async function handleSolve(problem: string) {
@@ -101,6 +106,8 @@ export default function TutorDashboard() {
     setSelectedVideo(null);
     setBuiltPacket(null);
     setPacketSent(false);
+    setSessionLogged(false);
+    setSessionLogError(null);
     setActiveTab("output");
 
     try {
@@ -137,6 +144,8 @@ export default function TutorDashboard() {
     setError(null);
     setSolveOutput(null);
     setGenerateOutput(null);
+    setSessionLogged(false);
+    setSessionLogError(null);
     setActiveTab("output");
 
     try {
@@ -175,6 +184,7 @@ export default function TutorDashboard() {
   async function handleBuildPacket() {
     if (!solveOutput) return;
     setPacketLoading(true);
+    setError(null);
     setBuiltPacket(null);
     setPacketSent(false);
     try {
@@ -216,7 +226,9 @@ export default function TutorDashboard() {
       a.href = url;
       a.download = filename;
       a.click();
-      URL.revokeObjectURL(url);
+      // Revoke on a delay — the browser needs time to actually read the blob
+      // before the URL is invalidated, especially on slower disks/AV scanners.
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
     } catch {
       setError("Network error — could not build packet");
     } finally {
@@ -260,10 +272,53 @@ export default function TutorDashboard() {
         return;
       }
       setPacketSent(true);
+      void logSession();
     } catch {
       setError("Network error — could not send packet");
     } finally {
       setSendLoading(false);
+    }
+  }
+
+  async function logSession() {
+    if (sessionLogLoading || sessionLogged) return;
+    if (!options.studentName || (!solveOutput && !generateOutput)) return;
+
+    setSessionLogLoading(true);
+    setSessionLogError(null);
+    try {
+      const res = await fetch("/api/log-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          date: new Date().toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          }),
+          studentName: options.studentName,
+          studentEmail: options.studentEmail || undefined,
+          subject,
+          skillName: selectedSkill?.name,
+          problemType: solveOutput?.ksg.show.problem_type ?? selectedSkill?.name ?? "",
+          capability: solveOutput ? "solve" : (generateOutput?.capability ?? ""),
+          duration: options.duration,
+          difficulty: options.difficulty,
+          wolframVerified: solveOutput?.wolframVerified,
+          homeworkAssigned: options.homeworkAssigned || undefined,
+          sessionNotes: options.studentNotes || undefined,
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setSessionLogError(json.error ?? "Could not log session");
+        return;
+      }
+      setSessionLogged(true);
+    } catch {
+      setSessionLogError("Network error — could not log session");
+    } finally {
+      setSessionLogLoading(false);
     }
   }
 
@@ -334,6 +389,11 @@ export default function TutorDashboard() {
                 <p className="text-xs text-slate-400 mt-0.5">
                   {subject} · {selectedSkill.difficulty}
                 </p>
+                {selectedSkill.standardCode && (
+                  <p className="text-xs text-slate-500 mt-0.5" title={selectedSkill.standardName}>
+                    GA Standard {selectedSkill.standardCode}
+                  </p>
+                )}
                 {selectedSkill.calculatorAllowed && (
                   <span className="mt-2 inline-block text-xs bg-slate-700 text-cyan-400 rounded px-2 py-0.5">
                     Calculator OK
@@ -390,7 +450,7 @@ export default function TutorDashboard() {
   </div>
   {activeTab === "visual" && (
     <button
-      onClick={() => setVisualFullscreen(false)}
+      onClick={() => setVisualFullscreen((v) => !v)}
       className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded px-2 py-1 border border-slate-700"
     >
       {visualFullscreen ? "Exit Fullscreen ✕" : "Expand ⤢"}
@@ -401,17 +461,17 @@ export default function TutorDashboard() {
 {visualFullscreen && (
   <button
     onClick={() => setVisualFullscreen(false)}
-    className="absolute top-3 right-3 z-[9999] text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded px-3 py-1.5 border border-slate-700 shadow-lg"
+    className="fixed top-3 right-3 z-[9999] text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded px-3 py-1.5 border border-slate-700 shadow-lg"
   >
     Exit Fullscreen ✕
   </button>
 )}
-          
+
   <div
   className={
     activeTab === "visual"
       ? visualFullscreen
-        ? "fixed inset-0 z-50 bg-slate-950 p-3 relative"
+        ? "fixed inset-0 z-50 bg-slate-950 p-3"
         : "flex-1 p-3 relative"
       : "hidden"
   }
@@ -522,6 +582,31 @@ export default function TutorDashboard() {
                     capability={generateOutput.capability}
                     data={generateOutput.data}
                   />
+                )}
+
+                {hasOutput && !isLoading && (
+                  <div className="mt-4 flex items-center gap-3">
+                    <button
+                      onClick={logSession}
+                      disabled={sessionLogLoading || sessionLogged || !options.studentName}
+                      title={!options.studentName ? "Add a student name in Session Options" : undefined}
+                      className="flex items-center gap-2 px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs font-semibold rounded disabled:opacity-50 transition-colors"
+                    >
+                      {sessionLogLoading ? (
+                        <>
+                          <span className="w-3 h-3 border-2 border-slate-500 border-t-slate-200 rounded-full animate-spin" />
+                          Logging…
+                        </>
+                      ) : sessionLogged ? (
+                        "Session Logged ✓"
+                      ) : (
+                        "Log Session"
+                      )}
+                    </button>
+                    {sessionLogError && (
+                      <span className="text-xs text-red-400">{sessionLogError}</span>
+                    )}
+                  </div>
                 )}
 
                 {!hasOutput && !isLoading && !error && (

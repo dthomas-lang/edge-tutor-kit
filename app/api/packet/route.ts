@@ -49,41 +49,46 @@ Requirements:
 - Provide the complete answer and a one-sentence explanation for each
 - Problems must be different from the reference problem`;
 
-  const { object: practice } = await generateObject({
-    model: anthropic("claude-haiku-4-5-20251001"),
-    schema: PacketPracticeSchema,
-    prompt: practicePrompt,
-  });
+  try {
+    const { object: practice } = await generateObject({
+      model: anthropic("claude-haiku-4-5-20251001"),
+      schema: PacketPracticeSchema,
+      prompt: practicePrompt,
+    });
 
-  const date = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+    const date = new Date().toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
 
-  const element = createElement(SessionPacket, {
-    studentName: studentName || "Student",
-    subject,
-    problem,
-    ksg,
-    wolframVerified,
-    practice,
-    selectedVideo: selectedVideo ?? null,
-    skillName,
-    date,
-  });
+    const element = createElement(SessionPacket, {
+      studentName: studentName || "Student",
+      subject,
+      problem,
+      ksg,
+      wolframVerified,
+      practice,
+      selectedVideo: selectedVideo ?? null,
+      skillName,
+      date,
+    });
 
-  const buffer = await renderToBuffer(element);
+    const buffer = await renderToBuffer(element);
 
-  const safeName = (studentName || "Student").replace(/[^a-z0-9]/gi, "-");
-  const safeDate = date.replace(/[^a-z0-9]/gi, "-");
+    const safeName = (studentName || "Student").replace(/[^a-z0-9]/gi, "-");
+    const safeDate = date.replace(/[^a-z0-9]/gi, "-");
 
-  return new NextResponse(buffer as unknown as BodyInit, {
-    status: 200,
-    headers: {
-      "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="session-packet-${safeName}-${safeDate}.pdf"`,
-      "Content-Length": buffer.byteLength.toString(),
-    },
-  });
+    return new NextResponse(buffer as unknown as BodyInit, {
+      status: 200,
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="session-packet-${safeName}-${safeDate}.pdf"`,
+        "Content-Length": buffer.byteLength.toString(),
+      },
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Failed to build session packet";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }

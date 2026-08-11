@@ -1,6 +1,7 @@
 "use client";
 
 import type { Capability } from "@/types";
+import MathText from "@/components/MathText";
 
 type Props = {
   capability: Capability;
@@ -36,7 +37,7 @@ function BulletList({ items }: { items: string[] }) {
       {items.map((item, i) => (
         <li key={i} className="flex gap-2 text-sm text-slate-300">
           <span className="text-slate-500 mt-0.5 shrink-0">—</span>
-          <span>{item}</span>
+          <MathText text={item} />
         </li>
       ))}
     </ul>
@@ -49,7 +50,7 @@ function NumberedList({ items }: { items: string[] }) {
       {items.map((item, i) => (
         <li key={i} className="flex gap-2 text-sm text-slate-300">
           <span className="text-amber-400 font-mono text-xs mt-0.5 shrink-0 w-4">{i + 1}.</span>
-          <span>{item}</span>
+          <MathText text={item} />
         </li>
       ))}
     </ol>
@@ -65,12 +66,14 @@ function QuestionBlock({
 }) {
   return (
     <div className="bg-slate-800 rounded p-3 space-y-1">
-      <p className="text-sm text-slate-200">{q.question}</p>
+      <p className="text-sm text-slate-200"><MathText text={q.question} /></p>
       {showAnswer && (
         <>
-          <p className="text-sm text-amber-400 font-medium">Answer: {q.answer}</p>
+          <p className="text-sm text-amber-400 font-medium">
+            Answer: <MathText text={q.answer} />
+          </p>
           {q.explanation && (
-            <p className="text-xs text-slate-400">{q.explanation}</p>
+            <p className="text-xs text-slate-400"><MathText text={q.explanation} /></p>
           )}
         </>
       )}
@@ -83,10 +86,10 @@ function renderTeachingGuide(data: Record<string, any>) {
   return (
     <>
       <Section title="Concept Overview">
-        <p className="text-sm text-slate-300">{data.concept_overview}</p>
+        <p className="text-sm text-slate-300"><MathText text={data.concept_overview} /></p>
       </Section>
       <Section title="Simple Explanation">
-        <p className="text-sm text-slate-300">{data.simple_explanation}</p>
+        <p className="text-sm text-slate-300"><MathText text={data.simple_explanation} /></p>
       </Section>
       <Section title="Common Misconceptions">
         <BulletList items={data.common_misconceptions} />
@@ -104,17 +107,17 @@ function renderWorkedExample(data: Record<string, any>) {
     <>
       <Section title="Problem">
         <div className="bg-slate-800 rounded p-3">
-          <p className="text-sm text-slate-200">{data.problem}</p>
+          <p className="text-sm text-slate-200"><MathText text={data.problem} /></p>
         </div>
       </Section>
       <Section title="Step-by-Step Solution">
         <NumberedList items={data.step_by_step} />
       </Section>
       <Section title="Final Answer">
-        <p className="text-sm font-semibold text-amber-400">{data.final_answer}</p>
+        <p className="text-sm font-semibold text-amber-400"><MathText text={data.final_answer} /></p>
       </Section>
       <Section title="Tutor Note">
-        <p className="text-sm text-cyan-400 italic">{data.tutor_note}</p>
+        <p className="text-sm text-cyan-400 italic"><MathText text={data.tutor_note} /></p>
       </Section>
     </>
   );
@@ -147,21 +150,21 @@ function renderMiniLesson(data: Record<string, any>) {
   return (
     <>
       <Section title="Objective">
-        <p className="text-sm text-slate-300">{data.objective}</p>
+        <p className="text-sm text-slate-300"><MathText text={data.objective} /></p>
       </Section>
       <Section title="Opening Hook">
-        <p className="text-sm text-slate-300 italic">{data.opening_hook}</p>
+        <p className="text-sm text-slate-300 italic"><MathText text={data.opening_hook} /></p>
       </Section>
       <Section title="Instruction Steps">
         <NumberedList items={data.instruction_steps} />
       </Section>
       <Section title="Check for Understanding">
         <div className="bg-slate-800 rounded p-3">
-          <p className="text-sm text-slate-200">{data.check_for_understanding}</p>
+          <p className="text-sm text-slate-200"><MathText text={data.check_for_understanding} /></p>
         </div>
       </Section>
       <Section title="Closing">
-        <p className="text-sm text-slate-300">{data.closing}</p>
+        <p className="text-sm text-slate-300"><MathText text={data.closing} /></p>
       </Section>
     </>
   );
@@ -185,10 +188,10 @@ function renderHomework(data: Record<string, any>) {
   return (
     <>
       <Section title="Skill Focus">
-        <p className="text-sm text-slate-300">{data.skill_focus}</p>
+        <p className="text-sm text-slate-300"><MathText text={data.skill_focus} /></p>
       </Section>
       <Section title="Instructions">
-        <p className="text-sm text-slate-300">{data.instructions}</p>
+        <p className="text-sm text-slate-300"><MathText text={data.instructions} /></p>
       </Section>
       <Section title="Questions">
         <div className="space-y-2">

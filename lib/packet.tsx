@@ -9,6 +9,75 @@ import {
 } from "@react-pdf/renderer";
 import type { KSGOutput, PacketPracticeOutput } from "./schemas";
 
+// The PDF is built with the base Helvetica font, which only supports plain
+// ASCII/WinAnsi text — it cannot render KaTeX/LaTeX markup or arbitrary
+// Unicode glyphs (checkmarks, em dashes, etc). Generated content is written
+// with LaTeX math for on-screen KaTeX rendering, so it must be de-LaTeX-ified
+// and stripped of unsupported characters before it goes into a <Text> node,
+// otherwise it renders as literal backslash syntax or garbled/overlapping text.
+function clean(input: string): string {
+  let s = input;
+
+  s = s.replace(/\\(?:text|mathrm|mathbf)\{([^{}]*)\}/g, "$1");
+  for (let i = 0; i < 2; i++) {
+    s = s.replace(/\\frac\{([^{}]*)\}\{([^{}]*)\}/g, "($1)/($2)");
+  }
+  s = s.replace(/\\sqrt\{([^{}]*)\}/g, "sqrt($1)");
+  s = s.replace(/\\sqrt/g, "sqrt");
+  s = s.replace(/\\left|\\right/g, "");
+
+  const symbolMap: [RegExp, string][] = [
+    [/\\quad/g, "  "],
+    [/\\,/g, " "],
+    [/\\cdot/g, "*"],
+    [/\\times/g, "x"],
+    [/\\div/g, "/"],
+    [/\\pm/g, "+/-"],
+    [/\\mp/g, "-/+"],
+    [/\\neq/g, "!="],
+    [/\\leq/g, "<="],
+    [/\\geq/g, ">="],
+    [/\\approx/g, "~="],
+    [/\\infty/g, "infinity"],
+    [/\\pi/g, "pi"],
+    [/\\theta/g, "theta"],
+    [/\\degree/g, " deg"],
+    [/\\Rightarrow/g, "=>"],
+    [/\\rightarrow/g, "->"],
+  ];
+  for (const [re, rep] of symbolMap) s = s.replace(re, rep);
+
+  s = s.replace(/\^\{([^{}]*)\}/g, "^$1");
+  s = s.replace(/_\{([^{}]*)\}/g, "_$1");
+
+  // any remaining backslash-commands and stray braces/backslashes/dollar signs
+  s = s.replace(/\\[a-zA-Z]+/g, "");
+  s = s.replace(/[{}\\]/g, "");
+  s = s.replace(/\$\$?/g, "");
+
+  // common Unicode punctuation -> ASCII-safe equivalents
+  s = s
+    .replace(/[‘’]/g, "'")
+    .replace(/[“”]/g, '"')
+    .replace(/[–—]/g, "-")
+    .replace(/…/g, "...")
+    .replace(/→/g, "->")
+    .replace(/×/g, "x")
+    .replace(/÷/g, "/")
+    .replace(/±/g, "+/-")
+    .replace(/✓/g, "OK")
+    .replace(/≠/g, "!=")
+    .replace(/≤/g, "<=")
+    .replace(/≥/g, ">=");
+
+  // final safety net: strip anything outside printable ASCII (prevents any
+  // other unsupported glyph from reaching the PDF and corrupting layout)
+  s = s.replace(/[^\x20-\x7E\n]/g, "");
+  s = s.replace(/[ \t]{2,}/g, " ").trim();
+
+  return s;
+}
+
 const NAVY = "#065078";
 const GREEN = "#0D6B40";
 const LIGHT_BG = "#F8FAFC";
@@ -79,7 +148,7 @@ const s = StyleSheet.create({
   },
   bulletRow: { flexDirection: "row", marginBottom: 4 },
   bullet: { width: 12, color: MUTED, fontSize: 9 },
-  bulletText: { flex: 1, fontSize: 9, color: DARK, lineHeight: 1.4 },
+  bulletText: { flex: 1, fontSize: 9, color: DARK },
   termRow: { flexDirection: "row", marginBottom: 4, flexWrap: "wrap" },
   termBold: { fontFamily: "Helvetica-Bold", fontSize: 9, marginRight: 4 },
   termDef: { fontSize: 9, color: MUTED, flex: 1 },
@@ -103,8 +172,8 @@ const s = StyleSheet.create({
     marginRight: 8,
   },
   stepAction: { fontSize: 9, fontFamily: "Helvetica-Bold", color: DARK },
-  stepWork: { fontSize: 9, color: DARK, marginBottom: 4, lineHeight: 1.5 },
-  stepWhy: { fontSize: 8, color: MUTED, fontStyle: "italic", lineHeight: 1.4 },
+  stepWork: { fontSize: 9, color: DARK, marginBottom: 4 },
+  stepWhy: { fontSize: 8, color: MUTED, fontStyle: "italic" },
   // Answer highlight
   answerBox: {
     backgroundColor: "#DCFCE7",
@@ -287,7 +356,7 @@ export function SessionPacket({
           )}
           <View style={s.metaCell}>
             <Text style={s.metaLabel}>Problem Type</Text>
-            <Text style={s.metaValue}>{ksg.show.problem_type}</Text>
+            <Text style={s.metaValue}>{clean(ksg.show.problem_type)}</Text>
           </View>
           <View style={s.metaCell}>
             <Text style={s.metaLabel}>Verification</Text>
@@ -301,7 +370,7 @@ export function SessionPacket({
 
         <Text style={s.sectionLabel}>Today&apos;s Problem</Text>
         <View style={[s.stepCard, { marginTop: 0 }]}>
-          <Text style={{ fontSize: 11, color: DARK, lineHeight: 1.5 }}>{problem}</Text>
+          <Text style={{ fontSize: 11, color: DARK }}>{clean(problem)}</Text>
         </View>
 
         <Text style={[s.pageFooterLeft]}>The Center at the EDGE · theEDGEgroup.com</Text>
@@ -326,7 +395,7 @@ export function SessionPacket({
                 {ksg.know.prerequisites.map((p, i) => (
                   <View key={i} style={s.bulletRow}>
                     <Text style={s.bullet}>•</Text>
-                    <Text style={s.bulletText}>{p}</Text>
+                    <Text style={s.bulletText}>{clean(p)}</Text>
                   </View>
                 ))}
               </View>
@@ -336,15 +405,15 @@ export function SessionPacket({
                 <Text style={[s.sectionLabel, { marginBottom: 4 }]}>Key Vocabulary</Text>
                 {ksg.know.key_vocabulary.map((v, i) => (
                   <View key={i} style={s.termRow}>
-                    <Text style={s.termBold}>{v.term}:</Text>
-                    <Text style={s.termDef}>{v.definition}</Text>
+                    <Text style={s.termBold}>{clean(v.term)}:</Text>
+                    <Text style={s.termDef}>{clean(v.definition)}</Text>
                   </View>
                 ))}
               </View>
             )}
             <View style={s.watchOutBox}>
               <Text style={s.watchOutLabel}>Watch Out For</Text>
-              <Text style={s.watchOutText}>{ksg.know.watch_out_for}</Text>
+              <Text style={s.watchOutText}>{clean(ksg.know.watch_out_for)}</Text>
             </View>
           </View>
         </View>
@@ -355,18 +424,18 @@ export function SessionPacket({
             <Text style={s.ksgHeaderText}>GROW — Key Takeaway &amp; Connections</Text>
           </View>
           <View style={s.ksgBody}>
-            <Text style={[s.bulletText, { marginBottom: 8, fontFamily: "Helvetica-Bold" }]}>
-              {ksg.grow.key_takeaway}
+            <Text style={{ fontSize: 9, color: DARK, marginBottom: 8, fontFamily: "Helvetica-Bold" }}>
+              {clean(ksg.grow.key_takeaway)}
             </Text>
             {ksg.grow.connections.map((c, i) => (
               <View key={i} style={s.bulletRow}>
-                <Text style={s.bullet}>→</Text>
-                <Text style={s.bulletText}>{c}</Text>
+                <Text style={s.bullet}>{"->"}</Text>
+                <Text style={s.bulletText}>{clean(c)}</Text>
               </View>
             ))}
             <View style={[s.divider, { marginTop: 8 }]} />
             <Text style={[s.sectionLabel, { marginBottom: 3 }]}>Next Challenge</Text>
-            <Text style={{ fontSize: 9, color: DARK }}>{ksg.grow.next_challenge}</Text>
+            <Text style={{ fontSize: 9, color: DARK }}>{clean(ksg.grow.next_challenge)}</Text>
           </View>
         </View>
 
@@ -384,16 +453,16 @@ export function SessionPacket({
           <View key={i} style={s.stepCard}>
             <View style={s.stepHeader}>
               <Text style={s.stepBadge}>Step {i + 1}</Text>
-              <Text style={s.stepAction}>{step.step}</Text>
+              <Text style={s.stepAction}>{clean(step.step)}</Text>
             </View>
-            <Text style={s.stepWork}>{step.work}</Text>
-            <Text style={s.stepWhy}>{step.why}</Text>
+            <Text style={s.stepWork}>{clean(step.work)}</Text>
+            <Text style={s.stepWhy}>{clean(step.why)}</Text>
           </View>
         ))}
 
         <View style={s.answerBox}>
           <Text style={s.answerLabel}>Final Answer</Text>
-          <Text style={s.answerText}>{ksg.show.final_answer}</Text>
+          <Text style={s.answerText}>{clean(ksg.show.final_answer)}</Text>
         </View>
 
         <Text style={s.pageFooterLeft}>The Center at the EDGE · theEDGEgroup.com</Text>
@@ -412,7 +481,7 @@ export function SessionPacket({
               <Text style={s.problemNum}>Problem {i + 1}</Text>
             </View>
             <View style={s.problemBody}>
-              <Text style={s.problemQ}>{prob.question}</Text>
+              <Text style={s.problemQ}>{clean(prob.question)}</Text>
               {/* blank work area lines */}
               {[0, 1, 2].map((l) => (
                 <View key={l} style={{ borderTop: `1 solid ${BORDER}`, marginBottom: 14 }} />
@@ -428,8 +497,8 @@ export function SessionPacket({
             <View key={i} style={s.answerKeyRow}>
               <Text style={s.answerKeyNum}>{i + 1}.</Text>
               <Text style={s.answerKeyText}>
-                {prob.answer}
-                {prob.explanation ? `  —  ${prob.explanation}` : ""}
+                {clean(prob.answer)}
+                {prob.explanation ? `  -  ${clean(prob.explanation)}` : ""}
               </Text>
             </View>
           ))}
@@ -448,7 +517,7 @@ export function SessionPacket({
         {videoUrl && selectedVideo && (
           <View style={s.resourceCard}>
             <Text style={s.resourceTitle}>Recommended Video</Text>
-            <Text style={s.resourceSub}>{selectedVideo.title}</Text>
+            <Text style={s.resourceSub}>{clean(selectedVideo.title)}</Text>
             <Link src={videoUrl} style={s.linkText}>
               {videoUrl}
             </Link>

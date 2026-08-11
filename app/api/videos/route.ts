@@ -27,9 +27,15 @@ export async function GET(req: NextRequest) {
     key: apiKey,
   });
 
-  const ytRes = await fetch(
-    `https://www.googleapis.com/youtube/v3/search?${params.toString()}`
-  );
+  let ytRes: Response;
+  try {
+    ytRes = await fetch(
+      `https://www.googleapis.com/youtube/v3/search?${params.toString()}`
+    );
+  } catch (err) {
+    console.error("YouTube fetch failed:", err);
+    return NextResponse.json({ error: "Could not reach YouTube" }, { status: 502 });
+  }
 
   if (!ytRes.ok) {
     const body = await ytRes.text();
