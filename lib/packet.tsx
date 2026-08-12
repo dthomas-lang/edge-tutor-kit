@@ -358,12 +358,12 @@ export function SessionPacket({
             <Text style={s.metaLabel}>Problem Type</Text>
             <Text style={s.metaValue}>{clean(ksg.show.problem_type)}</Text>
           </View>
-          <View style={s.metaCell}>
-            <Text style={s.metaLabel}>Verification</Text>
-            <Text style={[s.metaValue, { color: wolframVerified ? GREEN : MUTED }]}>
-              {wolframVerified ? "Wolfram Verified" : "Claude Generated"}
-            </Text>
-          </View>
+          {wolframVerified && (
+            <View style={s.metaCell}>
+              <Text style={s.metaLabel}>Verification</Text>
+              <Text style={[s.metaValue, { color: GREEN }]}>Wolfram Verified</Text>
+            </View>
+          )}
         </View>
 
         <View style={[s.divider, { marginTop: 20 }]} />

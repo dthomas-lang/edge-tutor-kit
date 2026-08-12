@@ -21,6 +21,7 @@ type GenerateOutput = {
   capability: Capability;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: Record<string, any>;
+  wolframVerified: boolean;
 } | null;
 
 type SolveOutput = {
@@ -174,7 +175,12 @@ export default function TutorDashboard() {
         return;
       }
 
-      setGenerateOutput({ kind: "generate", capability: json.capability, data: json.data });
+      setGenerateOutput({
+        kind: "generate",
+        capability: json.capability,
+        data: json.data,
+        wolframVerified: Boolean(json.wolframVerified),
+      });
     } catch {
       setError("Network error — check your connection");
     } finally {
@@ -498,7 +504,7 @@ export default function TutorDashboard() {
 
           {/* Output + Strategy content */}
           <div className={activeTab !== "visual" && activeTab !== "video" ? "flex-1 overflow-y-auto p-6" : "hidden"}>
-            {activeTab === "strategy" && <StrategyCards />}
+            {activeTab === "strategy" && <StrategyCards subject={subject} />}
 
             {activeTab === "output" && (
               <>
@@ -582,6 +588,7 @@ export default function TutorDashboard() {
                   <OutputCard
                     capability={generateOutput.capability}
                     data={generateOutput.data}
+                    wolframVerified={generateOutput.wolframVerified}
                   />
                 )}
 

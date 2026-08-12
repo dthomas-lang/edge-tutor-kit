@@ -4,21 +4,7 @@ import { anthropic } from "@ai-sdk/anthropic";
 import { KSGSchema } from "@/lib/schemas";
 import { buildKSGPrompt } from "@/lib/prompts";
 import { ALL_SUBJECTS, type Subject } from "@/lib/taxonomy";
-
-async function callWolfram(problem: string): Promise<string | null> {
-  const appId = process.env.WOLFRAM_APP_ID;
-  if (!appId) return null;
-
-  try {
-    const url = `https://www.wolframalpha.com/api/v1/llm-api?input=${encodeURIComponent(problem)}&appid=${appId}`;
-    const res = await fetch(url, { next: { revalidate: 0 } });
-    if (!res.ok) return null;
-    const text = await res.text();
-    return text.trim() || null;
-  } catch {
-    return null;
-  }
-}
+import { callWolfram } from "@/lib/wolfram";
 
 export async function POST(req: NextRequest) {
   let body: unknown;

@@ -20,6 +20,9 @@ Calculator allowed: ${skill.calculatorAllowed ? "Yes" : "No"}`;
 const MATH_FORMAT_INSTRUCTION =
   "Formatting: wrap every mathematical expression, equation, or variable in single-dollar LaTeX delimiters inline within your sentences (e.g. \"Solve $3x^2 - 5x - 2 = 0$ for $x$.\"). Use LaTeX commands for symbols (\\sqrt{}, \\frac{}{}, ^{}, _{}, \\leq, etc.) rather than unicode or plain-text approximations. Do not wrap plain prose in dollar signs.";
 
+const WOLFRAM_QUERY_INSTRUCTION =
+  "For wolfram_query: distill this problem down to its bare calculation — the equation to solve or expression to evaluate — with none of the word-problem framing, context, or units. Plain text only, no LaTeX, no dollar signs (e.g. \"solve -16t^2 + 32t = 0 for t\", not \"A ball is thrown...\"). This field is used only for automated answer-checking and is never shown to a student.";
+
 export function buildPrompt(
   capability: Capability,
   skill: Skill,
@@ -58,7 +61,9 @@ Provide:
 
 Write steps as if speaking to a student: clear, numbered, showing work.
 
-${MATH_FORMAT_INSTRUCTION}`;
+${MATH_FORMAT_INSTRUCTION}
+
+${WOLFRAM_QUERY_INSTRUCTION}`;
 
     case "practiceSet":
       return `You are an expert ${subject} tutor. Generate a practice set for the following skill.
@@ -72,7 +77,9 @@ Generate 2 easy, 3 medium, and 2 hard practice problems. Each problem needs:
 
 Scale difficulty appropriately. Hard problems should reflect actual ${subject} challenge level.
 
-${MATH_FORMAT_INSTRUCTION}`;
+${MATH_FORMAT_INSTRUCTION}
+
+${WOLFRAM_QUERY_INSTRUCTION}`;
 
     case "miniLesson":
       return `You are an expert ${subject} tutor. Design a focused mini-lesson for the following skill.

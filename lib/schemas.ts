@@ -6,6 +6,21 @@ const QuestionWithAnswerSchema = z.object({
   explanation: z.string(),
 });
 
+// Used wherever a generated problem's answer gets independently checked
+// against Wolfram Alpha. Wolfram's API can solve a bare equation reliably
+// but fails on narrative word-problem phrasing, so the model provides a
+// clean, calculation-only query alongside the student-facing question.
+const VerifiableQuestionSchema = z.object({
+  question: z.string(),
+  answer: z.string(),
+  explanation: z.string(),
+  wolfram_query: z
+    .string()
+    .describe(
+      "A short, plain-text math expression or equation capturing this problem's core calculation, solvable by Wolfram Alpha with no narrative context (e.g. 'solve -16t^2 + 32t = 0 for t'). No LaTeX, no word-problem framing."
+    ),
+});
+
 export const TeachingGuideSchema = z.object({
   concept_overview: z.string(),
   simple_explanation: z.string(),
@@ -18,12 +33,17 @@ export const WorkedExampleSchema = z.object({
   step_by_step: z.array(z.string()),
   final_answer: z.string(),
   tutor_note: z.string(),
+  wolfram_query: z
+    .string()
+    .describe(
+      "A short, plain-text math expression or equation capturing this problem's core calculation, solvable by Wolfram Alpha with no narrative context. No LaTeX, no word-problem framing."
+    ),
 });
 
 export const PracticeSetSchema = z.object({
-  easy: z.array(QuestionWithAnswerSchema),
-  medium: z.array(QuestionWithAnswerSchema),
-  hard: z.array(QuestionWithAnswerSchema),
+  easy: z.array(VerifiableQuestionSchema),
+  medium: z.array(VerifiableQuestionSchema),
+  hard: z.array(VerifiableQuestionSchema),
 });
 
 export const MiniLessonSchema = z.object({
@@ -62,13 +82,7 @@ export const ProgressNoteSchema = z.object({
 });
 
 export const PacketPracticeSchema = z.object({
-  problems: z.array(
-    z.object({
-      question: z.string(),
-      answer: z.string(),
-      explanation: z.string(),
-    })
-  ).length(3),
+  problems: z.array(VerifiableQuestionSchema).length(3),
 });
 export type PacketPracticeOutput = z.infer<typeof PacketPracticeSchema>;
 

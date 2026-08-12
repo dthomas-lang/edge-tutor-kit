@@ -7,6 +7,7 @@ type Props = {
   capability: Capability;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: Record<string, any>;
+  wolframVerified?: boolean;
 };
 
 const CAPABILITY_LABELS: Record<Capability, string> = {
@@ -259,16 +260,24 @@ const RENDERERS: Record<Capability, (data: Record<string, any>) => React.ReactNo
   progressNote: renderProgressNote,
 };
 
-export default function OutputCard({ capability, data }: Props) {
+export default function OutputCard({ capability, data, wolframVerified }: Props) {
   return (
     <div className="bg-slate-900 border border-slate-700 rounded-lg overflow-hidden">
-      <div className="bg-slate-800 px-4 py-3 border-b border-slate-700 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-slate-100">
-          {CAPABILITY_LABELS[capability]}
-        </h2>
+      <div className="bg-slate-800 px-4 py-3 border-b border-slate-700 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <h2 className="text-sm font-semibold text-slate-100">
+            {CAPABILITY_LABELS[capability]}
+          </h2>
+          {wolframVerified && (
+            <span className="shrink-0 inline-flex items-center gap-1.5 text-xs font-medium text-edge-green bg-green-950 border border-green-800 rounded-full px-2.5 py-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-edge-green" />
+              Wolfram Verified
+            </span>
+          )}
+        </div>
         <button
           onClick={() => navigator.clipboard.writeText(JSON.stringify(data, null, 2))}
-          className="text-xs text-slate-500 hover:text-slate-300 transition-colors"
+          className="text-xs text-slate-500 hover:text-slate-300 transition-colors shrink-0"
         >
           Copy JSON
         </button>
