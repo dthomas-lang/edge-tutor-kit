@@ -29,7 +29,7 @@ export default function SessionOptions({ values, onChange }: Props) {
       <div>
         <label className="text-xs text-slate-400 block mb-1">Duration (min)</label>
         <div className="flex gap-1">
-          {[10, 15, 20, 30].map((d) => (
+          {[15, 30, 45, 60, 90].map((d) => (
             <button
               key={d}
               onClick={() => set("duration", d)}

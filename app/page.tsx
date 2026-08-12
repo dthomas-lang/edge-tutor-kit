@@ -48,7 +48,7 @@ function visualToolFor(subject: Subject): "desmos" | "geogebra" | "none" {
 }
 
 const DEFAULT_OPTIONS: SessionOptionValues = {
-  duration: 15,
+  duration: 60,
   difficulty: "medium",
   studentName: "",
   studentEmail: "",
