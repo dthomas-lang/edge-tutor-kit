@@ -1,24 +1,13 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { SKILLS, type Skill, type Subject } from "@/lib/taxonomy";
+import { SKILLS, makeCustomSkill, type Skill, type Subject } from "@/lib/taxonomy";
 
 type Props = {
   onSelect: (skill: Skill) => void;
   selected: Skill | null;
   selectedSubject: Subject;
 };
-
-function makeCustomSkill(name: string, subject: Subject): Skill {
-  return {
-    id: `custom-${name.toLowerCase().replace(/\s+/g, "-")}`,
-    name,
-    subject: [subject],
-    domain: subject === "ELA" ? "ELA" : "Math",
-    difficulty: "intermediate",
-    tags: [],
-  };
-}
 
 export default function SkillSearch({ onSelect, selected, selectedSubject }: Props) {
   const [query, setQuery] = useState("");

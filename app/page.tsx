@@ -155,6 +155,7 @@ export default function TutorDashboard() {
         body: JSON.stringify({
           capability,
           skillId: selectedSkill.id,
+          skillName: selectedSkill.name,
           subject,
           options: {
             duration: options.duration,

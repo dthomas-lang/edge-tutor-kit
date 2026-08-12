@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateObject } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
-import { getSkillById, ALL_SUBJECTS } from "@/lib/taxonomy";
+import { getSkillById, makeCustomSkill, ALL_SUBJECTS, type Subject } from "@/lib/taxonomy";
 import { CAPABILITY_SCHEMAS, type Capability } from "@/lib/schemas";
 import { buildPrompt } from "@/lib/prompts";
 
@@ -15,9 +15,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const { capability, skillId, subject, options = {} } = body as {
+  const { capability, skillId, skillName, subject, options = {} } = body as {
     capability: unknown;
     skillId: unknown;
+    skillName: unknown;
     subject: unknown;
     options: Record<string, unknown>;
   };
@@ -40,7 +41,16 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const skill = getSkillById(skillId);
+  const subj = subject as Subject;
+
+  // Skills not in the taxonomy (a tutor's free-text "custom topic" search)
+  // arrive with a "custom-" id and no catalog entry — rebuild the same
+  // ad-hoc skill server-side from its name rather than rejecting it.
+  const skill =
+    getSkillById(skillId) ??
+    (skillId.startsWith("custom-") && typeof skillName === "string" && skillName.trim()
+      ? makeCustomSkill(skillName, subj)
+      : undefined);
   if (!skill) {
     return NextResponse.json(
       { error: `Unknown skillId: ${skillId}` },
@@ -50,7 +60,7 @@ export async function POST(req: NextRequest) {
 
   const cap = capability as Capability;
   const schema = CAPABILITY_SCHEMAS[cap];
-  const prompt = buildPrompt(cap, skill, subject as "SAT" | "ACT", options as Parameters<typeof buildPrompt>[3]);
+  const prompt = buildPrompt(cap, skill, subj, options as Parameters<typeof buildPrompt>[3]);
 
   try {
     const { object } = await generateObject({

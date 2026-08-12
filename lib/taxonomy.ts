@@ -642,3 +642,20 @@ export function getSkillsBySubject(subject: Subject): Skill[] {
 export function getSkillsByDomain(domain: Skill["domain"]): Skill[] {
   return SKILLS.filter((s) => s.domain === domain);
 }
+
+/**
+ * Builds an ad-hoc Skill for a topic that isn't in the taxonomy — used both
+ * when a tutor picks a free-text "custom topic" in the skill search and,
+ * server-side, to reconstruct that same skill from its id so the generate
+ * tools work for it too (see app/api/generate/route.ts).
+ */
+export function makeCustomSkill(name: string, subject: Subject): Skill {
+  return {
+    id: `custom-${name.toLowerCase().trim().replace(/\s+/g, "-")}`,
+    name,
+    subject: [subject],
+    domain: subject === "ELA" ? "ELA" : "Math",
+    difficulty: "intermediate",
+    tags: [],
+  };
+}
