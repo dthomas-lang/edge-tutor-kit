@@ -410,10 +410,8 @@ function renderResourceBody(capability: Capability, data: Record<string, any>) {
           <Text style={s.para}>{clean(data.concept_overview)}</Text>
           <Text style={s.sectionLabel}>Simple Explanation</Text>
           <Text style={s.para}>{clean(data.simple_explanation)}</Text>
-          <Text style={s.sectionLabel}>Common Misconceptions</Text>
+          <Text style={s.sectionLabel}>Watch Out For</Text>
           <Bullets items={data.common_misconceptions} />
-          <Text style={[s.sectionLabel, { marginTop: 8 }]}>Tutor Talking Points</Text>
-          <Bullets items={data.tutor_talking_points} />
         </>
       );
     case "workedExample":
@@ -430,9 +428,12 @@ function renderResourceBody(capability: Capability, data: Record<string, any>) {
             <Text style={s.answerText}>{clean(data.final_answer)}</Text>
           </View>
           {data.tutor_note && (
-            <Text style={[s.para, { marginTop: 8, fontStyle: "italic", color: MUTED }]}>
-              {clean(data.tutor_note)}
-            </Text>
+            <>
+              <Text style={[s.sectionLabel, { marginTop: 8 }]}>Key Insight</Text>
+              <Text style={[s.para, { fontStyle: "italic", color: MUTED }]}>
+                {clean(data.tutor_note)}
+              </Text>
+            </>
           )}
         </>
       );
@@ -458,7 +459,7 @@ function renderResourceBody(capability: Capability, data: Record<string, any>) {
           <Text style={s.para}>{clean(data.objective)}</Text>
           <Text style={s.sectionLabel}>Opening Hook</Text>
           <Text style={[s.para, { fontStyle: "italic" }]}>{clean(data.opening_hook)}</Text>
-          <Text style={s.sectionLabel}>Instruction Steps</Text>
+          <Text style={s.sectionLabel}>Steps</Text>
           <NumberedItems items={data.instruction_steps} />
           <Text style={[s.sectionLabel, { marginTop: 8 }]}>Check for Understanding</Text>
           <View style={[s.stepCard, { marginTop: 0 }]}>
@@ -537,78 +538,78 @@ export function SessionPacket({
     : null;
   const anyVerified = Boolean(solve?.wolframVerified) || resources.some((r) => r.wolframVerified);
 
+  // Printable resources exclude capabilities that were never meant for the
+  // student to read directly — Progress Note is explicitly internal/tutor-only,
+  // and Parent Update is written to be sent to a parent, not handed to the
+  // student in their own packet.
+  const printableResources = resources.filter(
+    (r) => r.capability !== "progressNote" && r.capability !== "parentUpdate"
+  );
+
+  // Rendered once, at the top of whichever page ends up first — replaces what
+  // used to be its own mostly-blank cover page.
+  const introBlock = (
+    <>
+      <Text style={s.coverTitle}>Session Packet</Text>
+      <Text style={s.coverSub}>The Center at the EDGE · Academic Coaching</Text>
+
+      <View style={s.metaGrid}>
+        {skillName && (
+          <View style={s.metaCell}>
+            <Text style={s.metaLabel}>Skill</Text>
+            <Text style={s.metaValue}>{skillName}</Text>
+          </View>
+        )}
+        {solve && (
+          <View style={s.metaCell}>
+            <Text style={s.metaLabel}>Problem Type</Text>
+            <Text style={s.metaValue}>{clean(solve.ksg.show.problem_type)}</Text>
+          </View>
+        )}
+        {printableResources.length > 0 && (
+          <View style={s.metaCell}>
+            <Text style={s.metaLabel}>Resources</Text>
+            <Text style={s.metaValue}>{printableResources.length}</Text>
+          </View>
+        )}
+        {anyVerified && (
+          <View style={s.metaCell}>
+            <Text style={s.metaLabel}>Verification</Text>
+            <Text style={[s.metaValue, { color: GREEN }]}>Wolfram Verified</Text>
+          </View>
+        )}
+      </View>
+
+      {!solve && printableResources.length > 0 && (
+        <View style={{ marginTop: 10 }}>
+          {printableResources.map((r, i) => (
+            <View key={i} style={s.bulletRow}>
+              <Text style={s.bullet}>•</Text>
+              <Text style={s.bulletText}>{CAPABILITY_LABELS[r.capability]}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+
+      <View style={[s.divider, { marginTop: 16, marginBottom: 4 }]} />
+    </>
+  );
+
   return (
     <Document
       title={`Session Packet — ${studentName || "Student"} — ${date}`}
       author="The Center at the EDGE"
     >
-      {/* ── Page 1: Cover ── */}
-      <Page size="LETTER" style={s.page}>
-        <PageHeader studentName={studentName} subject={subject} date={date} />
-
-        <Text style={s.coverTitle}>Session Packet</Text>
-        <Text style={s.coverSub}>The Center at the EDGE · Academic Coaching</Text>
-
-        <View style={s.metaGrid}>
-          {skillName && (
-            <View style={s.metaCell}>
-              <Text style={s.metaLabel}>Skill</Text>
-              <Text style={s.metaValue}>{skillName}</Text>
-            </View>
-          )}
-          {solve && (
-            <View style={s.metaCell}>
-              <Text style={s.metaLabel}>Problem Type</Text>
-              <Text style={s.metaValue}>{clean(solve.ksg.show.problem_type)}</Text>
-            </View>
-          )}
-          {resources.length > 0 && (
-            <View style={s.metaCell}>
-              <Text style={s.metaLabel}>Resources</Text>
-              <Text style={s.metaValue}>{resources.length}</Text>
-            </View>
-          )}
-          {anyVerified && (
-            <View style={s.metaCell}>
-              <Text style={s.metaLabel}>Verification</Text>
-              <Text style={[s.metaValue, { color: GREEN }]}>Wolfram Verified</Text>
-            </View>
-          )}
-        </View>
-
-        <View style={[s.divider, { marginTop: 20 }]} />
-
-        {solve && (
-          <>
-            <Text style={s.sectionLabel}>Today&apos;s Problem</Text>
-            <View style={[s.stepCard, { marginTop: 0 }]}>
-              <Text style={{ fontSize: 11, color: DARK }}>{clean(solve.problem)}</Text>
-            </View>
-          </>
-        )}
-
-        {!solve && resources.length > 0 && (
-          <>
-            <Text style={s.sectionLabel}>Resources Covered This Session</Text>
-            <View style={[s.stepCard, { marginTop: 0 }]}>
-              {resources.map((r, i) => (
-                <View key={i} style={s.bulletRow}>
-                  <Text style={s.bullet}>•</Text>
-                  <Text style={s.bulletText}>{CAPABILITY_LABELS[r.capability]}</Text>
-                </View>
-              ))}
-            </View>
-          </>
-        )}
-
-        <Text style={[s.pageFooterLeft]}>The Center at the EDGE · theEDGEgroup.com</Text>
-        <Text style={s.pageNumber} render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`} />
-      </Page>
-
-      {/* ── Page 2: KSG Summary (Solve flow only) ── */}
+      {/* ── Page 1: KSG Summary (Solve flow only) — intro merged in above ── */}
       {solve && (
       <Page size="LETTER" style={s.page}>
         <PageHeader studentName={studentName} subject={subject} date={date} />
+        {introBlock}
+
+        <Text style={s.sectionLabel}>Today&apos;s Problem</Text>
+        <View style={[s.stepCard, { marginTop: 0, marginBottom: 12 }]}>
+          <Text style={{ fontSize: 11, color: DARK }}>{clean(solve.problem)}</Text>
+        </View>
 
         <Text style={s.sectionLabel}>Know · Show · Grow</Text>
 
@@ -743,9 +744,10 @@ export function SessionPacket({
       )}
 
       {/* ── Generated resource pages — one per Generate-tool result from the session ── */}
-      {resources.map((resource, i) => (
+      {printableResources.map((resource, i) => (
         <Page key={i} size="LETTER" style={s.page}>
           <PageHeader studentName={studentName} subject={subject} date={date} />
+          {!solve && i === 0 && introBlock}
 
           <View style={s.resourceHeader}>
             <Text style={s.resourceHeaderText}>{CAPABILITY_LABELS[resource.capability]}</Text>
@@ -764,6 +766,7 @@ export function SessionPacket({
       {/* ── Final page: Tools & Links ── */}
       <Page size="LETTER" style={s.page}>
         <PageHeader studentName={studentName} subject={subject} date={date} />
+        {!solve && printableResources.length === 0 && introBlock}
 
         <Text style={s.sectionLabel}>Tools &amp; Links</Text>
 

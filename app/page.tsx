@@ -101,6 +101,26 @@ export default function TutorDashboard() {
     setSessionLogError(null);
   }
 
+  function handleEndSession() {
+    if (hasOutput && !sessionLogged) {
+      const proceed = window.confirm(
+        "This session hasn't been logged yet. End session and clear everything anyway?"
+      );
+      if (!proceed) return;
+    }
+    setSelectedSkill(null);
+    setOptions(DEFAULT_OPTIONS);
+    setResources([]);
+    setSolveOutput(null);
+    setSelectedVideo(null);
+    setError(null);
+    setBuiltPacket(null);
+    setPacketSent(false);
+    setSessionLogged(false);
+    setSessionLogError(null);
+    setActiveTab("output");
+  }
+
   async function handleSolve(problem: string) {
     setSolveLoading(true);
     setError(null);
@@ -358,6 +378,14 @@ export default function TutorDashboard() {
         />
         <div className="flex items-center gap-3">
           <span className="text-xs text-slate-500">Tutor View</span>
+          {(hasOutput || selectedSkill) && (
+            <button
+              onClick={handleEndSession}
+              className="text-xs font-medium text-slate-400 hover:text-white border border-slate-700 hover:border-slate-500 rounded px-3 py-1.5 transition-colors"
+            >
+              End Session
+            </button>
+          )}
           <Link
             href="/student"
             target="_blank"
