@@ -1,6 +1,6 @@
 "use client";
 
-import type { Capability } from "@/types";
+import { CAPABILITY_LABELS, type Capability } from "@/types";
 import MathText from "@/components/MathText";
 
 type Props = {
@@ -8,17 +8,6 @@ type Props = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: Record<string, any>;
   wolframVerified?: boolean;
-};
-
-const CAPABILITY_LABELS: Record<Capability, string> = {
-  teachingGuide: "Teaching Guide",
-  workedExample: "Worked Example",
-  practiceSet: "Practice Set",
-  miniLesson: "Mini Lesson",
-  exitTicket: "Exit Ticket",
-  homework: "Homework",
-  parentUpdate: "Parent Update",
-  progressNote: "Progress Note",
 };
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {

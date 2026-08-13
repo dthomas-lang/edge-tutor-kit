@@ -3,7 +3,7 @@ import { renderToBuffer } from "@react-pdf/renderer";
 import { createElement } from "react";
 import { anthropic } from "@ai-sdk/anthropic";
 import { generateObject } from "ai";
-import { SessionPacket } from "@/lib/packet";
+import { SessionPacket, type PacketResourceItem } from "@/lib/packet";
 import { PacketPracticeSchema, KSGSchema, type PacketPracticeOutput } from "@/lib/schemas";
 import type { Subject } from "@/lib/taxonomy";
 import { verifyProblemsWithWolfram } from "@/lib/wolfram";
@@ -50,11 +50,10 @@ For each problem, if the draft's "answer" already matches its Wolfram result, ke
 type RequestBody = {
   studentName?: string;
   subject: Subject;
-  problem: string;
-  ksg: unknown;
-  wolframVerified: boolean;
-  selectedVideo: { videoId: string; title: string } | null;
   skillName?: string;
+  solve?: { problem: string; ksg: unknown; wolframVerified: boolean } | null;
+  resources?: PacketResourceItem[];
+  selectedVideo: { videoId: string; title: string } | null;
 };
 
 export async function POST(req: NextRequest) {
@@ -65,23 +64,36 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const { studentName, subject, problem, ksg: rawKsg, wolframVerified, selectedVideo, skillName } = body;
+  const { studentName, subject, skillName, solve: rawSolve, resources = [], selectedVideo } = body;
 
-  // Validate KSG shape
-  const ksgParsed = KSGSchema.safeParse(rawKsg);
-  if (!ksgParsed.success) {
-    return NextResponse.json({ error: "Invalid KSG data" }, { status: 400 });
+  if (!rawSolve && resources.length === 0) {
+    return NextResponse.json(
+      { error: "Nothing to build a packet from — solve a problem or generate a resource first" },
+      { status: 400 }
+    );
   }
-  const ksg = ksgParsed.data;
 
-  // Generate 3 practice problems via Claude
-  const practicePrompt = `You are an expert ${subject} tutor. Generate exactly 3 practice problems that reinforce this skill.
+  // Validate KSG shape when a solved problem is part of this packet
+  let solve: { problem: string; ksg: import("@/lib/schemas").KSGOutput; wolframVerified: boolean } | null = null;
+  if (rawSolve) {
+    const ksgParsed = KSGSchema.safeParse(rawSolve.ksg);
+    if (!ksgParsed.success) {
+      return NextResponse.json({ error: "Invalid KSG data" }, { status: 400 });
+    }
+    solve = { problem: rawSolve.problem, ksg: ksgParsed.data, wolframVerified: rawSolve.wolframVerified };
+  }
+
+  try {
+    // Practice problems only make sense as reinforcement for a solved problem
+    let practice: PacketPracticeOutput | null = null;
+    if (solve) {
+      const practicePrompt = `You are an expert ${subject} tutor. Generate exactly 3 practice problems that reinforce this skill.
 
 Context:
 - Subject: ${subject}
-- Problem type: ${ksg.show.problem_type}
-- Reference problem: ${problem}
-- Key concept: ${ksg.grow.key_takeaway}
+- Problem type: ${solve.ksg.show.problem_type}
+- Reference problem: ${solve.problem}
+- Key concept: ${solve.ksg.grow.key_takeaway}
 
 Requirements:
 - Problems should vary in difficulty: one easy, one medium, one harder
@@ -90,14 +102,14 @@ Requirements:
 - Problems must be different from the reference problem
 - For wolfram_query: distill each problem down to its bare calculation — the equation to solve or expression to evaluate — with none of the word-problem framing, context, or units. Plain text only, no LaTeX. This field is used only for automated answer-checking and is never shown to a student.`;
 
-  try {
-    const { object: draftPractice } = await generateObject({
-      model: anthropic("claude-haiku-4-5-20251001"),
-      schema: PacketPracticeSchema,
-      prompt: practicePrompt,
-    });
+      const { object: draftPractice } = await generateObject({
+        model: anthropic("claude-haiku-4-5-20251001"),
+        schema: PacketPracticeSchema,
+        prompt: practicePrompt,
+      });
 
-    const practice = await verifyPacketPractice(draftPractice, subject);
+      practice = await verifyPacketPractice(draftPractice, subject);
+    }
 
     const date = new Date().toLocaleDateString("en-US", {
       year: "numeric",
@@ -108,10 +120,9 @@ Requirements:
     const element = createElement(SessionPacket, {
       studentName: studentName || "Student",
       subject,
-      problem,
-      ksg,
-      wolframVerified,
+      solve,
       practice,
+      resources,
       selectedVideo: selectedVideo ?? null,
       skillName,
       date,

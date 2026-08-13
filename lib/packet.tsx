@@ -8,6 +8,7 @@ import {
   StyleSheet,
 } from "@react-pdf/renderer";
 import type { KSGOutput, PacketPracticeOutput } from "./schemas";
+import { CAPABILITY_LABELS, type Capability } from "@/types";
 
 // The PDF is built with the base Helvetica font, which only supports plain
 // ASCII/WinAnsi text — it cannot render KaTeX/LaTeX markup or arbitrary
@@ -80,6 +81,7 @@ function clean(input: string): string {
 
 const NAVY = "#065078";
 const GREEN = "#0D6B40";
+const AMBER = "#B45309";
 const LIGHT_BG = "#F8FAFC";
 const BORDER = "#E2E8F0";
 const MUTED = "#64748B";
@@ -221,6 +223,34 @@ const s = StyleSheet.create({
   answerKeyRow: { flexDirection: "row", marginBottom: 4 },
   answerKeyNum: { width: 20, fontSize: 9, fontFamily: "Helvetica-Bold", color: DARK },
   answerKeyText: { flex: 1, fontSize: 9, color: DARK },
+  // Generated-resource pages (Teaching Guide, Worked Example, etc.)
+  resourceHeader: {
+    backgroundColor: AMBER,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 4,
+    marginBottom: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  resourceHeaderText: {
+    fontSize: 9,
+    fontFamily: "Helvetica-Bold",
+    color: "#FFFFFF",
+    letterSpacing: 0.5,
+  },
+  para: { fontSize: 9, color: DARK, marginBottom: 8, lineHeight: 1.4 },
+  qaBlock: {
+    backgroundColor: LIGHT_BG,
+    border: `1 solid ${BORDER}`,
+    borderRadius: 4,
+    padding: 8,
+    marginBottom: 8,
+  },
+  qaQuestion: { fontSize: 9, color: DARK, marginBottom: 4 },
+  qaAnswer: { fontSize: 9, fontFamily: "Helvetica-Bold", color: GREEN, marginBottom: 2 },
+  qaExplanation: { fontSize: 8, color: MUTED },
   // Resources page
   resourceCard: {
     backgroundColor: LIGHT_BG,
@@ -277,13 +307,25 @@ const s = StyleSheet.create({
   watchOutText: { fontSize: 9, color: "#713F12" },
 });
 
-type Props = {
-  studentName: string;
-  subject: string;
+type SolveData = {
   problem: string;
   ksg: KSGOutput;
   wolframVerified: boolean;
-  practice: PacketPracticeOutput;
+};
+
+export type PacketResourceItem = {
+  capability: Capability;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data: Record<string, any>;
+  wolframVerified: boolean;
+};
+
+type Props = {
+  studentName: string;
+  subject: string;
+  solve?: SolveData | null;
+  practice?: PacketPracticeOutput | null;
+  resources: PacketResourceItem[];
   selectedVideo: { videoId: string; title: string } | null;
   skillName?: string;
   date: string;
@@ -320,13 +362,172 @@ function PageHeader({
   );
 }
 
+function Bullets({ items }: { items: string[] }) {
+  return (
+    <>
+      {items.map((item, i) => (
+        <View key={i} style={s.bulletRow}>
+          <Text style={s.bullet}>•</Text>
+          <Text style={s.bulletText}>{clean(item)}</Text>
+        </View>
+      ))}
+    </>
+  );
+}
+
+function NumberedItems({ items }: { items: string[] }) {
+  return (
+    <>
+      {items.map((item, i) => (
+        <View key={i} style={s.answerKeyRow}>
+          <Text style={s.answerKeyNum}>{i + 1}.</Text>
+          <Text style={s.answerKeyText}>{clean(item)}</Text>
+        </View>
+      ))}
+    </>
+  );
+}
+
+function QA({ q, a, explanation }: { q: string; a: string; explanation?: string }) {
+  return (
+    <View style={s.qaBlock}>
+      <Text style={s.qaQuestion}>{clean(q)}</Text>
+      <Text style={s.qaAnswer}>Answer: {clean(a)}</Text>
+      {explanation && <Text style={s.qaExplanation}>{clean(explanation)}</Text>}
+    </View>
+  );
+}
+
+// A generated capability resource (Teaching Guide, Worked Example, etc.) can be
+// any of 8 different shapes — dispatch per-capability rather than assuming one.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function renderResourceBody(capability: Capability, data: Record<string, any>) {
+  switch (capability) {
+    case "teachingGuide":
+      return (
+        <>
+          <Text style={s.sectionLabel}>Concept Overview</Text>
+          <Text style={s.para}>{clean(data.concept_overview)}</Text>
+          <Text style={s.sectionLabel}>Simple Explanation</Text>
+          <Text style={s.para}>{clean(data.simple_explanation)}</Text>
+          <Text style={s.sectionLabel}>Common Misconceptions</Text>
+          <Bullets items={data.common_misconceptions} />
+          <Text style={[s.sectionLabel, { marginTop: 8 }]}>Tutor Talking Points</Text>
+          <Bullets items={data.tutor_talking_points} />
+        </>
+      );
+    case "workedExample":
+      return (
+        <>
+          <Text style={s.sectionLabel}>Problem</Text>
+          <View style={[s.stepCard, { marginTop: 0 }]}>
+            <Text style={{ fontSize: 10, color: DARK }}>{clean(data.problem)}</Text>
+          </View>
+          <Text style={s.sectionLabel}>Step-by-Step Solution</Text>
+          <NumberedItems items={data.step_by_step} />
+          <View style={[s.answerBox, { marginTop: 8 }]}>
+            <Text style={s.answerLabel}>Final Answer</Text>
+            <Text style={s.answerText}>{clean(data.final_answer)}</Text>
+          </View>
+          {data.tutor_note && (
+            <Text style={[s.para, { marginTop: 8, fontStyle: "italic", color: MUTED }]}>
+              {clean(data.tutor_note)}
+            </Text>
+          )}
+        </>
+      );
+    case "practiceSet":
+      return (
+        <>
+          {(["easy", "medium", "hard"] as const).map((tier) => (
+            <View key={tier} style={{ marginBottom: 8 }}>
+              <Text style={s.sectionLabel}>{tier}</Text>
+              {(data[tier] as { question: string; answer: string; explanation: string }[]).map(
+                (q, i) => (
+                  <QA key={i} q={q.question} a={q.answer} explanation={q.explanation} />
+                )
+              )}
+            </View>
+          ))}
+        </>
+      );
+    case "miniLesson":
+      return (
+        <>
+          <Text style={s.sectionLabel}>Objective</Text>
+          <Text style={s.para}>{clean(data.objective)}</Text>
+          <Text style={s.sectionLabel}>Opening Hook</Text>
+          <Text style={[s.para, { fontStyle: "italic" }]}>{clean(data.opening_hook)}</Text>
+          <Text style={s.sectionLabel}>Instruction Steps</Text>
+          <NumberedItems items={data.instruction_steps} />
+          <Text style={[s.sectionLabel, { marginTop: 8 }]}>Check for Understanding</Text>
+          <View style={[s.stepCard, { marginTop: 0 }]}>
+            <Text style={{ fontSize: 9, color: DARK }}>{clean(data.check_for_understanding)}</Text>
+          </View>
+          <Text style={s.sectionLabel}>Closing</Text>
+          <Text style={s.para}>{clean(data.closing)}</Text>
+        </>
+      );
+    case "exitTicket":
+      return (
+        <>
+          {(data.questions as { question: string; answer: string }[]).map((q, i) => (
+            <QA key={i} q={q.question} a={q.answer} />
+          ))}
+        </>
+      );
+    case "homework":
+      return (
+        <>
+          <Text style={s.sectionLabel}>Skill Focus</Text>
+          <Text style={s.para}>{clean(data.skill_focus)}</Text>
+          <Text style={s.sectionLabel}>Instructions</Text>
+          <Text style={s.para}>{clean(data.instructions)}</Text>
+          <Text style={s.sectionLabel}>Questions</Text>
+          {(data.questions as { question: string; answer: string; explanation: string }[]).map(
+            (q, i) => (
+              <QA key={i} q={q.question} a={q.answer} explanation={q.explanation} />
+            )
+          )}
+        </>
+      );
+    case "parentUpdate":
+      return (
+        <>
+          <Text style={s.sectionLabel}>Student Strength</Text>
+          <Text style={s.para}>{clean(data.student_strength)}</Text>
+          <Text style={s.sectionLabel}>Main Gap</Text>
+          <Text style={s.para}>{clean(data.main_gap)}</Text>
+          <Text style={s.sectionLabel}>Skills Practiced</Text>
+          <Bullets items={data.skills_practiced} />
+          <Text style={[s.sectionLabel, { marginTop: 8 }]}>Homework Assigned</Text>
+          <Text style={s.para}>{clean(data.homework_assigned)}</Text>
+          <Text style={s.sectionLabel}>Encouragement Note</Text>
+          <Text style={[s.para, { fontStyle: "italic" }]}>{clean(data.encouragement_note)}</Text>
+        </>
+      );
+    case "progressNote":
+      return (
+        <>
+          <Text style={s.sectionLabel}>Session Summary</Text>
+          <Text style={s.para}>{clean(data.session_summary)}</Text>
+          <Text style={s.sectionLabel}>Concepts Covered</Text>
+          <Bullets items={data.concepts_covered} />
+          <Text style={[s.sectionLabel, { marginTop: 8 }]}>Student Performance</Text>
+          <Text style={s.para}>{clean(data.student_performance)}</Text>
+          <Text style={s.sectionLabel}>Next Steps</Text>
+          <Text style={s.para}>{clean(data.next_steps)}</Text>
+        </>
+      );
+  }
+}
+
 export function SessionPacket({
   studentName,
   subject,
-  problem,
-  ksg,
-  wolframVerified,
+  solve,
   practice,
+  resources,
   selectedVideo,
   skillName,
   date,
@@ -334,6 +535,7 @@ export function SessionPacket({
   const videoUrl = selectedVideo
     ? `https://www.youtube.com/watch?v=${selectedVideo.videoId}`
     : null;
+  const anyVerified = Boolean(solve?.wolframVerified) || resources.some((r) => r.wolframVerified);
 
   return (
     <Document
@@ -354,11 +556,19 @@ export function SessionPacket({
               <Text style={s.metaValue}>{skillName}</Text>
             </View>
           )}
-          <View style={s.metaCell}>
-            <Text style={s.metaLabel}>Problem Type</Text>
-            <Text style={s.metaValue}>{clean(ksg.show.problem_type)}</Text>
-          </View>
-          {wolframVerified && (
+          {solve && (
+            <View style={s.metaCell}>
+              <Text style={s.metaLabel}>Problem Type</Text>
+              <Text style={s.metaValue}>{clean(solve.ksg.show.problem_type)}</Text>
+            </View>
+          )}
+          {resources.length > 0 && (
+            <View style={s.metaCell}>
+              <Text style={s.metaLabel}>Resources</Text>
+              <Text style={s.metaValue}>{resources.length}</Text>
+            </View>
+          )}
+          {anyVerified && (
             <View style={s.metaCell}>
               <Text style={s.metaLabel}>Verification</Text>
               <Text style={[s.metaValue, { color: GREEN }]}>Wolfram Verified</Text>
@@ -368,16 +578,35 @@ export function SessionPacket({
 
         <View style={[s.divider, { marginTop: 20 }]} />
 
-        <Text style={s.sectionLabel}>Today&apos;s Problem</Text>
-        <View style={[s.stepCard, { marginTop: 0 }]}>
-          <Text style={{ fontSize: 11, color: DARK }}>{clean(problem)}</Text>
-        </View>
+        {solve && (
+          <>
+            <Text style={s.sectionLabel}>Today&apos;s Problem</Text>
+            <View style={[s.stepCard, { marginTop: 0 }]}>
+              <Text style={{ fontSize: 11, color: DARK }}>{clean(solve.problem)}</Text>
+            </View>
+          </>
+        )}
+
+        {!solve && resources.length > 0 && (
+          <>
+            <Text style={s.sectionLabel}>Resources Covered This Session</Text>
+            <View style={[s.stepCard, { marginTop: 0 }]}>
+              {resources.map((r, i) => (
+                <View key={i} style={s.bulletRow}>
+                  <Text style={s.bullet}>•</Text>
+                  <Text style={s.bulletText}>{CAPABILITY_LABELS[r.capability]}</Text>
+                </View>
+              ))}
+            </View>
+          </>
+        )}
 
         <Text style={[s.pageFooterLeft]}>The Center at the EDGE · theEDGEgroup.com</Text>
         <Text style={s.pageNumber} render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`} />
       </Page>
 
-      {/* ── Page 2: KSG Summary ── */}
+      {/* ── Page 2: KSG Summary (Solve flow only) ── */}
+      {solve && (
       <Page size="LETTER" style={s.page}>
         <PageHeader studentName={studentName} subject={subject} date={date} />
 
@@ -389,10 +618,10 @@ export function SessionPacket({
             <Text style={s.ksgHeaderText}>KNOW — Prerequisites &amp; Vocabulary</Text>
           </View>
           <View style={s.ksgBody}>
-            {ksg.know.prerequisites.length > 0 && (
+            {solve.ksg.know.prerequisites.length > 0 && (
               <View style={{ marginBottom: 8 }}>
                 <Text style={[s.sectionLabel, { marginBottom: 4 }]}>Prerequisites</Text>
-                {ksg.know.prerequisites.map((p, i) => (
+                {solve.ksg.know.prerequisites.map((p, i) => (
                   <View key={i} style={s.bulletRow}>
                     <Text style={s.bullet}>•</Text>
                     <Text style={s.bulletText}>{clean(p)}</Text>
@@ -400,10 +629,10 @@ export function SessionPacket({
                 ))}
               </View>
             )}
-            {ksg.know.key_vocabulary.length > 0 && (
+            {solve.ksg.know.key_vocabulary.length > 0 && (
               <View style={{ marginBottom: 8 }}>
                 <Text style={[s.sectionLabel, { marginBottom: 4 }]}>Key Vocabulary</Text>
-                {ksg.know.key_vocabulary.map((v, i) => (
+                {solve.ksg.know.key_vocabulary.map((v, i) => (
                   <View key={i} style={s.termRow}>
                     <Text style={s.termBold}>{clean(v.term)}:</Text>
                     <Text style={s.termDef}>{clean(v.definition)}</Text>
@@ -413,7 +642,7 @@ export function SessionPacket({
             )}
             <View style={s.watchOutBox}>
               <Text style={s.watchOutLabel}>Watch Out For</Text>
-              <Text style={s.watchOutText}>{clean(ksg.know.watch_out_for)}</Text>
+              <Text style={s.watchOutText}>{clean(solve.ksg.know.watch_out_for)}</Text>
             </View>
           </View>
         </View>
@@ -425,9 +654,9 @@ export function SessionPacket({
           </View>
           <View style={s.ksgBody}>
             <Text style={{ fontSize: 9, color: DARK, marginBottom: 8, fontFamily: "Helvetica-Bold" }}>
-              {clean(ksg.grow.key_takeaway)}
+              {clean(solve.ksg.grow.key_takeaway)}
             </Text>
-            {ksg.grow.connections.map((c, i) => (
+            {solve.ksg.grow.connections.map((c, i) => (
               <View key={i} style={s.bulletRow}>
                 <Text style={s.bullet}>{"->"}</Text>
                 <Text style={s.bulletText}>{clean(c)}</Text>
@@ -435,21 +664,23 @@ export function SessionPacket({
             ))}
             <View style={[s.divider, { marginTop: 8 }]} />
             <Text style={[s.sectionLabel, { marginBottom: 3 }]}>Next Challenge</Text>
-            <Text style={{ fontSize: 9, color: DARK }}>{clean(ksg.grow.next_challenge)}</Text>
+            <Text style={{ fontSize: 9, color: DARK }}>{clean(solve.ksg.grow.next_challenge)}</Text>
           </View>
         </View>
 
         <Text style={s.pageFooterLeft}>The Center at the EDGE · theEDGEgroup.com</Text>
         <Text style={s.pageNumber} render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`} />
       </Page>
+      )}
 
-      {/* ── Page 3: Worked Solution ── */}
+      {/* ── Page 3: Worked Solution (Solve flow only) ── */}
+      {solve && (
       <Page size="LETTER" style={s.page}>
         <PageHeader studentName={studentName} subject={subject} date={date} />
 
         <Text style={s.sectionLabel}>Step-by-Step Solution</Text>
 
-        {ksg.show.steps.map((step, i) => (
+        {solve.ksg.show.steps.map((step, i) => (
           <View key={i} style={s.stepCard}>
             <View style={s.stepHeader}>
               <Text style={s.stepBadge}>Step {i + 1}</Text>
@@ -462,14 +693,16 @@ export function SessionPacket({
 
         <View style={s.answerBox}>
           <Text style={s.answerLabel}>Final Answer</Text>
-          <Text style={s.answerText}>{clean(ksg.show.final_answer)}</Text>
+          <Text style={s.answerText}>{clean(solve.ksg.show.final_answer)}</Text>
         </View>
 
         <Text style={s.pageFooterLeft}>The Center at the EDGE · theEDGEgroup.com</Text>
         <Text style={s.pageNumber} render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`} />
       </Page>
+      )}
 
-      {/* ── Page 4: Practice Problems + Answer Key ── */}
+      {/* ── Page 4: Practice Problems + Answer Key (Solve flow only) ── */}
+      {solve && practice && (
       <Page size="LETTER" style={s.page}>
         <PageHeader studentName={studentName} subject={subject} date={date} />
 
@@ -507,12 +740,32 @@ export function SessionPacket({
         <Text style={s.pageFooterLeft}>The Center at the EDGE · theEDGEgroup.com</Text>
         <Text style={s.pageNumber} render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`} />
       </Page>
+      )}
 
-      {/* ── Page 5: Resources ── */}
+      {/* ── Generated resource pages — one per Generate-tool result from the session ── */}
+      {resources.map((resource, i) => (
+        <Page key={i} size="LETTER" style={s.page}>
+          <PageHeader studentName={studentName} subject={subject} date={date} />
+
+          <View style={s.resourceHeader}>
+            <Text style={s.resourceHeaderText}>{CAPABILITY_LABELS[resource.capability]}</Text>
+            {resource.wolframVerified && (
+              <Text style={[s.resourceHeaderText, { marginLeft: "auto" }]}>Wolfram Verified</Text>
+            )}
+          </View>
+
+          {renderResourceBody(resource.capability, resource.data)}
+
+          <Text style={s.pageFooterLeft}>The Center at the EDGE · theEDGEgroup.com</Text>
+          <Text style={s.pageNumber} render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`} />
+        </Page>
+      ))}
+
+      {/* ── Final page: Tools & Links ── */}
       <Page size="LETTER" style={s.page}>
         <PageHeader studentName={studentName} subject={subject} date={date} />
 
-        <Text style={s.sectionLabel}>Session Resources</Text>
+        <Text style={s.sectionLabel}>Tools &amp; Links</Text>
 
         {videoUrl && selectedVideo && (
           <View style={s.resourceCard}>

@@ -16,13 +16,13 @@ import VideoSearch from "@/components/VideoSearch";
 import { ALL_SUBJECTS, type Subject, type Skill } from "@/lib/taxonomy";
 import type { Capability, KSGOutput } from "@/types";
 
-type GenerateOutput = {
-  kind: "generate";
+type ResourceItem = {
+  id: string;
   capability: Capability;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: Record<string, any>;
   wolframVerified: boolean;
-} | null;
+};
 
 type SolveOutput = {
   kind: "solve";
@@ -61,7 +61,7 @@ export default function TutorDashboard() {
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
   const [options, setOptions] = useState<SessionOptionValues>(DEFAULT_OPTIONS);
 
-  const [generateOutput, setGenerateOutput] = useState<GenerateOutput>(null);
+  const [resources, setResources] = useState<ResourceItem[]>([]);
   const [solveOutput, setSolveOutput] = useState<SolveOutput>(null);
   const [selectedVideo, setSelectedVideo] = useState<{ videoId: string; title: string } | null>(null);
   const [builtPacket, setBuiltPacket] = useState<{ base64: string; filename: string } | null>(null);
@@ -91,10 +91,12 @@ export default function TutorDashboard() {
   function handleSubjectChange(s: Subject) {
     setSubject(s);
     setSelectedSkill(null);
-    setGenerateOutput(null);
+    setResources([]);
     setSolveOutput(null);
     setSelectedVideo(null);
     setError(null);
+    setBuiltPacket(null);
+    setPacketSent(false);
     setSessionLogged(false);
     setSessionLogError(null);
   }
@@ -102,7 +104,6 @@ export default function TutorDashboard() {
   async function handleSolve(problem: string) {
     setSolveLoading(true);
     setError(null);
-    setGenerateOutput(null);
     setSolveOutput(null);
     setSelectedVideo(null);
     setBuiltPacket(null);
@@ -143,8 +144,8 @@ export default function TutorDashboard() {
     if (!selectedSkill) return;
     setGenerateLoading(true);
     setError(null);
-    setSolveOutput(null);
-    setGenerateOutput(null);
+    setBuiltPacket(null);
+    setPacketSent(false);
     setSessionLogged(false);
     setSessionLogError(null);
     setActiveTab("output");
@@ -175,12 +176,15 @@ export default function TutorDashboard() {
         return;
       }
 
-      setGenerateOutput({
-        kind: "generate",
-        capability: json.capability,
-        data: json.data,
-        wolframVerified: Boolean(json.wolframVerified),
-      });
+      setResources((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          capability: json.capability,
+          data: json.data,
+          wolframVerified: Boolean(json.wolframVerified),
+        },
+      ]);
     } catch {
       setError("Network error — check your connection");
     } finally {
@@ -189,7 +193,7 @@ export default function TutorDashboard() {
   }
 
   async function handleBuildPacket() {
-    if (!solveOutput) return;
+    if (!hasOutput) return;
     setPacketLoading(true);
     setError(null);
     setBuiltPacket(null);
@@ -201,11 +205,20 @@ export default function TutorDashboard() {
         body: JSON.stringify({
           studentName: options.studentName,
           subject,
-          problem: solveOutput.problem,
-          ksg: solveOutput.ksg,
-          wolframVerified: solveOutput.wolframVerified,
-          selectedVideo,
           skillName: selectedSkill?.name,
+          solve: solveOutput
+            ? {
+                problem: solveOutput.problem,
+                ksg: solveOutput.ksg,
+                wolframVerified: solveOutput.wolframVerified,
+              }
+            : null,
+          resources: resources.map(({ capability, data, wolframVerified }) => ({
+            capability,
+            data,
+            wolframVerified,
+          })),
+          selectedVideo,
         }),
       });
       if (!res.ok) {
@@ -244,7 +257,7 @@ export default function TutorDashboard() {
   }
 
   async function handleSendPacket() {
-    if (!solveOutput || !builtPacket) return;
+    if (!hasOutput || !builtPacket) return;
     setSendLoading(true);
     setError(null);
     try {
@@ -257,10 +270,10 @@ export default function TutorDashboard() {
           studentName: options.studentName || "Student",
           studentEmail: options.studentEmail,
           subject,
-          problem: solveOutput.problem,
-          problemType: solveOutput.ksg.show.problem_type,
+          problem: solveOutput?.problem ?? `${selectedSkill?.name ?? subject} — session resources`,
+          problemType: solveOutput?.ksg.show.problem_type ?? selectedSkill?.name ?? "Session",
           skillName: selectedSkill?.name,
-          wolframVerified: solveOutput.wolframVerified,
+          wolframVerified: solveOutput?.wolframVerified ?? resources.some((r) => r.wolframVerified),
           videoTitle: selectedVideo?.title,
           videoUrl: selectedVideo
             ? `https://www.youtube.com/watch?v=${selectedVideo.videoId}`
@@ -289,7 +302,7 @@ export default function TutorDashboard() {
 
   async function logSession() {
     if (sessionLogLoading || sessionLogged) return;
-    if (!options.studentName || (!solveOutput && !generateOutput)) return;
+    if (!options.studentName || !hasOutput) return;
 
     setSessionLogLoading(true);
     setSessionLogError(null);
@@ -308,10 +321,12 @@ export default function TutorDashboard() {
           subject,
           skillName: selectedSkill?.name,
           problemType: solveOutput?.ksg.show.problem_type ?? selectedSkill?.name ?? "",
-          capability: solveOutput ? "solve" : (generateOutput?.capability ?? ""),
+          capability: solveOutput
+            ? "solve"
+            : (resources[resources.length - 1]?.capability ?? ""),
           duration: options.duration,
           difficulty: options.difficulty,
-          wolframVerified: solveOutput?.wolframVerified,
+          wolframVerified: solveOutput?.wolframVerified ?? resources.some((r) => r.wolframVerified),
           homeworkAssigned: options.homeworkAssigned || undefined,
           sessionNotes: options.studentNotes || undefined,
         }),
@@ -330,7 +345,7 @@ export default function TutorDashboard() {
   }
 
   const isLoading = solveLoading || generateLoading;
-  const hasOutput = solveOutput !== null || generateOutput !== null;
+  const hasOutput = solveOutput !== null || resources.length > 0;
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
@@ -508,8 +523,14 @@ export default function TutorDashboard() {
 
             {activeTab === "output" && (
               <>
+                {error && !isLoading && (
+                  <div className="bg-red-950 border border-red-800 rounded p-4 mb-4">
+                    <p className="text-sm text-red-400">{error}</p>
+                  </div>
+                )}
+
                 {isLoading && (
-                  <div className="flex items-center justify-center h-48">
+                  <div className={hasOutput ? "mb-4" : "flex items-center justify-center h-48"}>
                     <LoadingState
                       label={
                         solveLoading
@@ -520,79 +541,78 @@ export default function TutorDashboard() {
                   </div>
                 )}
 
-                {error && !isLoading && (
-                  <div className="bg-red-950 border border-red-800 rounded p-4">
-                    <p className="text-sm text-red-400">{error}</p>
-                  </div>
-                )}
-
-                {solveOutput && !isLoading && (
-                  <>
+                {solveOutput && (
+                  <div className="mb-4">
                     <KSGCard
                       problem={solveOutput.problem}
                       subject={solveOutput.subject}
                       ksg={solveOutput.ksg}
                       wolframVerified={solveOutput.wolframVerified}
                     />
-                    <div className="mt-4 flex flex-wrap items-center gap-3">
+                  </div>
+                )}
+
+                {resources.map((resource) => (
+                  <div key={resource.id} className="mb-4">
+                    <OutputCard
+                      capability={resource.capability}
+                      data={resource.data}
+                      wolframVerified={resource.wolframVerified}
+                    />
+                  </div>
+                ))}
+
+                {hasOutput && (
+                  <div className="flex flex-wrap items-center gap-3">
+                    <button
+                      onClick={handleBuildPacket}
+                      disabled={packetLoading || sendLoading}
+                      className="flex items-center gap-2 px-4 py-2.5 bg-edge-green text-white text-sm font-semibold rounded hover:opacity-90 disabled:opacity-50 transition-opacity"
+                    >
+                      {packetLoading ? (
+                        <>
+                          <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          Building Packet…
+                        </>
+                      ) : (
+                        builtPacket ? "Rebuild Packet" : "Build Session Packet"
+                      )}
+                    </button>
+
+                    {builtPacket && !packetSent && (
                       <button
-                        onClick={handleBuildPacket}
-                        disabled={packetLoading || sendLoading}
-                        className="flex items-center gap-2 px-4 py-2.5 bg-edge-green text-white text-sm font-semibold rounded hover:opacity-90 disabled:opacity-50 transition-opacity"
+                        onClick={handleSendPacket}
+                        disabled={sendLoading || !options.studentEmail}
+                        title={!options.studentEmail ? "Add a student email in Session Options" : undefined}
+                        className="flex items-center gap-2 px-4 py-2.5 bg-edge-navy text-white text-sm font-semibold rounded hover:opacity-90 disabled:opacity-50 transition-opacity"
                       >
-                        {packetLoading ? (
+                        {sendLoading ? (
                           <>
                             <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            Building Packet…
+                            Sending…
                           </>
                         ) : (
-                          builtPacket ? "Rebuild Packet" : "Build Session Packet"
+                          "Send to Student →"
                         )}
                       </button>
+                    )}
 
-                      {builtPacket && !packetSent && (
-                        <button
-                          onClick={handleSendPacket}
-                          disabled={sendLoading || !options.studentEmail}
-                          title={!options.studentEmail ? "Add a student email in Session Options" : undefined}
-                          className="flex items-center gap-2 px-4 py-2.5 bg-edge-navy text-white text-sm font-semibold rounded hover:opacity-90 disabled:opacity-50 transition-opacity"
-                        >
-                          {sendLoading ? (
-                            <>
-                              <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                              Sending…
-                            </>
-                          ) : (
-                            "Send to Student →"
-                          )}
-                        </button>
-                      )}
+                    {packetSent && (
+                      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-edge-green bg-green-950 border border-green-800 rounded-full px-3 py-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-edge-green" />
+                        Sent to {options.studentName || "student"}
+                      </span>
+                    )}
 
-                      {packetSent && (
-                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-edge-green bg-green-950 border border-green-800 rounded-full px-3 py-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-edge-green" />
-                          Sent to {options.studentName || "student"}
-                        </span>
-                      )}
-
-                      {!options.studentName && !builtPacket && (
-                        <p className="text-xs text-slate-500">
-                          Add a student name in Session Options to personalize the PDF.
-                        </p>
-                      )}
-                    </div>
-                  </>
+                    {!options.studentName && !builtPacket && (
+                      <p className="text-xs text-slate-500">
+                        Add a student name in Session Options to personalize the PDF.
+                      </p>
+                    )}
+                  </div>
                 )}
 
-                {generateOutput && !isLoading && (
-                  <OutputCard
-                    capability={generateOutput.capability}
-                    data={generateOutput.data}
-                    wolframVerified={generateOutput.wolframVerified}
-                  />
-                )}
-
-                {hasOutput && !isLoading && (
+                {hasOutput && (
                   <div className="mt-4 flex items-center gap-3">
                     <button
                       onClick={logSession}

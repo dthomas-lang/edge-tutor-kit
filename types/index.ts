@@ -24,6 +24,17 @@ export type ProgressNote = z.infer<typeof ProgressNoteSchema>;
 
 export type Capability = keyof typeof CAPABILITY_SCHEMAS;
 
+export const CAPABILITY_LABELS: Record<Capability, string> = {
+  teachingGuide: "Teaching Guide",
+  workedExample: "Worked Example",
+  practiceSet: "Practice Set",
+  miniLesson: "Mini Lesson",
+  exitTicket: "Exit Ticket",
+  homework: "Homework",
+  parentUpdate: "Parent Update",
+  progressNote: "Progress Note",
+};
+
 export type { Subject };
 export type { KSGOutput };
 
