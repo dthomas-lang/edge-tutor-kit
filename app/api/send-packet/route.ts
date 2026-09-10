@@ -10,8 +10,11 @@ type RequestBody = {
   problemType: string;
   skillName?: string;
   wolframVerified: boolean;
+  /** First video only — kept so the existing n8n email template still works. */
   videoTitle?: string;
   videoUrl?: string;
+  /** Every video attached to the session, in the order the tutor added them. */
+  videos?: { topic: string; title: string; url: string }[];
   sessionNotes?: string;
   date: string;
 };

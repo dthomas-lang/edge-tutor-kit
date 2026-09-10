@@ -14,7 +14,8 @@ import DesmosEmbed from "@/components/DesmosEmbed";
 import GeoGebraEmbed from "@/components/GeoGebraEmbed";
 import VideoSearch from "@/components/VideoSearch";
 import { ALL_SUBJECTS, type Subject, type Skill } from "@/lib/taxonomy";
-import type { Capability, KSGOutput } from "@/types";
+import type { Capability, KSGOutput, SessionVideo } from "@/types";
+import type { VideoResult } from "@/app/api/videos/route";
 
 type ResourceItem = {
   id: string;
@@ -63,7 +64,7 @@ export default function TutorDashboard() {
 
   const [resources, setResources] = useState<ResourceItem[]>([]);
   const [solveOutput, setSolveOutput] = useState<SolveOutput>(null);
-  const [selectedVideo, setSelectedVideo] = useState<{ videoId: string; title: string } | null>(null);
+  const [videos, setVideos] = useState<SessionVideo[]>([]);
   const [builtPacket, setBuiltPacket] = useState<{ base64: string; filename: string } | null>(null);
   const [packetSent, setPacketSent] = useState(false);
   const [sessionLogged, setSessionLogged] = useState(false);
@@ -88,12 +89,41 @@ export default function TutorDashboard() {
     return "";
   }
 
+  /** The topic label a video added right now should carry in the packet. */
+  function currentVideoTopic(): string {
+    if (solveOutput) return solveOutput.ksg.show.problem_type;
+    if (selectedSkill) return selectedSkill.name;
+    return "";
+  }
+
+  function handleAddVideo(video: VideoResult, topic: string) {
+    setVideos((prev) => [
+      ...prev,
+      {
+        id: crypto.randomUUID(),
+        videoId: video.videoId,
+        title: video.title,
+        channelTitle: video.channelTitle,
+        topic,
+      },
+    ]);
+    // The packet on disk no longer matches the session — force a rebuild.
+    setBuiltPacket(null);
+    setPacketSent(false);
+  }
+
+  function handleRemoveVideo(id: string) {
+    setVideos((prev) => prev.filter((v) => v.id !== id));
+    setBuiltPacket(null);
+    setPacketSent(false);
+  }
+
   function handleSubjectChange(s: Subject) {
     setSubject(s);
     setSelectedSkill(null);
     setResources([]);
     setSolveOutput(null);
-    setSelectedVideo(null);
+    setVideos([]);
     setError(null);
     setBuiltPacket(null);
     setPacketSent(false);
@@ -112,7 +142,7 @@ export default function TutorDashboard() {
     setOptions(DEFAULT_OPTIONS);
     setResources([]);
     setSolveOutput(null);
-    setSelectedVideo(null);
+    setVideos([]);
     setError(null);
     setBuiltPacket(null);
     setPacketSent(false);
@@ -125,7 +155,8 @@ export default function TutorDashboard() {
     setSolveLoading(true);
     setError(null);
     setSolveOutput(null);
-    setSelectedVideo(null);
+    // Videos deliberately survive a new solve — a session covers several
+    // topics and each one's video should still reach the student's packet.
     setBuiltPacket(null);
     setPacketSent(false);
     setSessionLogged(false);
@@ -238,7 +269,7 @@ export default function TutorDashboard() {
             data,
             wolframVerified,
           })),
-          selectedVideo,
+          videos,
         }),
       });
       if (!res.ok) {
@@ -294,10 +325,18 @@ export default function TutorDashboard() {
           problemType: solveOutput?.ksg.show.problem_type ?? selectedSkill?.name ?? "Session",
           skillName: selectedSkill?.name,
           wolframVerified: solveOutput?.wolframVerified ?? resources.some((r) => r.wolframVerified),
-          videoTitle: selectedVideo?.title,
-          videoUrl: selectedVideo
-            ? `https://www.youtube.com/watch?v=${selectedVideo.videoId}`
+          // videoTitle/videoUrl carry the first video only, so the existing
+          // n8n email template keeps working unchanged. The full list rides
+          // alongside in `videos` for templates that want all of them.
+          videoTitle: videos[0]?.title,
+          videoUrl: videos[0]
+            ? `https://www.youtube.com/watch?v=${videos[0].videoId}`
             : undefined,
+          videos: videos.map((v) => ({
+            topic: v.topic,
+            title: v.title,
+            url: `https://www.youtube.com/watch?v=${v.videoId}`,
+          })),
           sessionNotes: options.studentNotes || undefined,
           date: new Date().toLocaleDateString("en-US", {
             year: "numeric",
@@ -495,6 +534,11 @@ export default function TutorDashboard() {
         }`}
       >
         {TAB_LABELS[tab]}
+        {tab === "video" && videos.length > 0 && (
+          <span className="ml-1.5 inline-block bg-edge-green text-white rounded-full px-1.5 text-[10px] font-semibold align-middle">
+            {videos.length}
+          </span>
+        )}
       </button>
     ))}
   </div>
@@ -541,7 +585,10 @@ export default function TutorDashboard() {
           <div className={activeTab === "video" ? "flex-1 overflow-y-auto p-6" : "hidden"}>
             <VideoSearch
               defaultQuery={buildVideoQuery()}
-              onSelect={(videoId, title) => setSelectedVideo({ videoId, title })}
+              currentTopic={currentVideoTopic()}
+              videos={videos}
+              onAdd={handleAddVideo}
+              onRemove={handleRemoveVideo}
             />
           </div>
 

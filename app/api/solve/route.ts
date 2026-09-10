@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateObject } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
+import { MODEL_REASONING } from "@/lib/models";
 import { KSGSchema } from "@/lib/schemas";
 import { buildKSGPrompt } from "@/lib/prompts";
 import { ALL_SUBJECTS, type Subject } from "@/lib/taxonomy";
@@ -37,7 +38,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const { object } = await generateObject({
-      model: anthropic("claude-sonnet-4-6"),
+      model: anthropic(MODEL_REASONING),
       schema: KSGSchema,
       prompt,
     });

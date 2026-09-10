@@ -38,6 +38,21 @@ export const CAPABILITY_LABELS: Record<Capability, string> = {
 export type { Subject };
 export type { KSGOutput };
 
+/**
+ * A YouTube video a tutor has attached to the current session. A session can
+ * cover several topics, so videos accumulate — each one carries the topic it
+ * was found for, which becomes its heading in the student's packet.
+ */
+export type SessionVideo = {
+  /** Stable list key. Distinct from videoId so the same video can be added under two topics. */
+  id: string;
+  videoId: string;
+  title: string;
+  channelTitle?: string;
+  /** The skill or problem type this video was pulled in to support. */
+  topic: string;
+};
+
 export type GenerateRequest = {
   capability: Capability;
   skillId: string;

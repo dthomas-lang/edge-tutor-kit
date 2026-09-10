@@ -8,7 +8,7 @@ import {
   StyleSheet,
 } from "@react-pdf/renderer";
 import type { KSGOutput, PacketPracticeOutput } from "./schemas";
-import { CAPABILITY_LABELS, type Capability } from "@/types";
+import { CAPABILITY_LABELS, type Capability, type SessionVideo } from "@/types";
 
 // The PDF is built with the base Helvetica font, which only supports plain
 // ASCII/WinAnsi text — it cannot render KaTeX/LaTeX markup or arbitrary
@@ -326,10 +326,14 @@ type Props = {
   solve?: SolveData | null;
   practice?: PacketPracticeOutput | null;
   resources: PacketResourceItem[];
-  selectedVideo: { videoId: string; title: string } | null;
+  videos: SessionVideo[];
   skillName?: string;
   date: string;
 };
+
+function youtubeUrl(videoId: string): string {
+  return `https://www.youtube.com/watch?v=${videoId}`;
+}
 
 function PageHeader({
   studentName,
@@ -529,13 +533,10 @@ export function SessionPacket({
   solve,
   practice,
   resources,
-  selectedVideo,
+  videos,
   skillName,
   date,
 }: Props) {
-  const videoUrl = selectedVideo
-    ? `https://www.youtube.com/watch?v=${selectedVideo.videoId}`
-    : null;
   const anyVerified = Boolean(solve?.wolframVerified) || resources.some((r) => r.wolframVerified);
 
   // Printable resources exclude capabilities that were never meant for the
@@ -770,17 +771,25 @@ export function SessionPacket({
 
         <Text style={s.sectionLabel}>Tools &amp; Links</Text>
 
-        {videoUrl && selectedVideo && (
+        {videos.length > 0 && (
           <View style={s.resourceCard}>
-            <Text style={s.resourceTitle}>Recommended Video</Text>
-            <Text style={s.resourceSub}>{clean(selectedVideo.title)}</Text>
-            <Link src={videoUrl} style={s.linkText}>
-              {videoUrl}
-            </Link>
+            <Text style={s.resourceTitle}>
+              {videos.length === 1 ? "Recommended Video" : "Recommended Videos"}
+            </Text>
+            {videos.map((v, i) => (
+              <View key={v.id} style={i > 0 ? { marginTop: 10 } : undefined}>
+                <Text style={s.resourceSub}>
+                  {clean(v.topic)} — {clean(v.title)}
+                </Text>
+                <Link src={youtubeUrl(v.videoId)} style={s.linkText}>
+                  {youtubeUrl(v.videoId)}
+                </Link>
+              </View>
+            ))}
           </View>
         )}
 
-        {!videoUrl && (
+        {videos.length === 0 && (
           <View style={s.resourceCard}>
             <Text style={s.resourceTitle}>Recommended Video</Text>
             <Text style={[s.resourceSub, { marginBottom: 0 }]}>

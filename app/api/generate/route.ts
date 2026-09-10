@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateObject } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
+import { MODEL_REASONING } from "@/lib/models";
 import { getSkillById, makeCustomSkill, ALL_SUBJECTS, type Subject } from "@/lib/taxonomy";
 import {
   CAPABILITY_SCHEMAS,
@@ -52,7 +53,7 @@ If the draft's final_answer already matches the Wolfram result, return the draft
 
   try {
     const { object } = await generateObject({
-      model: anthropic("claude-sonnet-4-6"),
+      model: anthropic(MODEL_REASONING),
       schema: WorkedExampleSchema,
       prompt,
     });
@@ -96,7 +97,7 @@ For each problem, if the draft's "answer" already matches its Wolfram result, ke
 
   try {
     const { object } = await generateObject({
-      model: anthropic("claude-sonnet-4-6"),
+      model: anthropic(MODEL_REASONING),
       schema: PracticeSetSchema,
       prompt,
     });
@@ -163,7 +164,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const { object } = await generateObject({
-      model: anthropic("claude-sonnet-4-6"),
+      model: anthropic(MODEL_REASONING),
       schema,
       prompt,
     });

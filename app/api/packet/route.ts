@@ -3,9 +3,11 @@ import { renderToBuffer } from "@react-pdf/renderer";
 import { createElement } from "react";
 import { anthropic } from "@ai-sdk/anthropic";
 import { generateObject } from "ai";
+import { MODEL_FAST, MODEL_REASONING } from "@/lib/models";
 import { SessionPacket, type PacketResourceItem } from "@/lib/packet";
 import { PacketPracticeSchema, KSGSchema, type PacketPracticeOutput } from "@/lib/schemas";
 import type { Subject } from "@/lib/taxonomy";
+import type { SessionVideo } from "@/types";
 import { verifyProblemsWithWolfram } from "@/lib/wolfram";
 
 // The 3 practice problems are Claude-invented and Claude-solved with nothing
@@ -37,7 +39,7 @@ For each problem, if the draft's "answer" already matches its Wolfram result, ke
 
   try {
     const { object } = await generateObject({
-      model: anthropic("claude-sonnet-4-6"),
+      model: anthropic(MODEL_REASONING),
       schema: PacketPracticeSchema,
       prompt,
     });
@@ -53,7 +55,7 @@ type RequestBody = {
   skillName?: string;
   solve?: { problem: string; ksg: unknown; wolframVerified: boolean } | null;
   resources?: PacketResourceItem[];
-  selectedVideo: { videoId: string; title: string } | null;
+  videos?: SessionVideo[];
 };
 
 export async function POST(req: NextRequest) {
@@ -64,7 +66,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const { studentName, subject, skillName, solve: rawSolve, resources = [], selectedVideo } = body;
+  const { studentName, subject, skillName, solve: rawSolve, resources = [], videos = [] } = body;
 
   if (!rawSolve && resources.length === 0) {
     return NextResponse.json(
@@ -103,7 +105,7 @@ Requirements:
 - For wolfram_query: distill each problem down to its bare calculation — the equation to solve or expression to evaluate — with none of the word-problem framing, context, or units. Plain text only, no LaTeX. This field is used only for automated answer-checking and is never shown to a student.`;
 
       const { object: draftPractice } = await generateObject({
-        model: anthropic("claude-haiku-4-5-20251001"),
+        model: anthropic(MODEL_FAST),
         schema: PacketPracticeSchema,
         prompt: practicePrompt,
       });
@@ -123,7 +125,7 @@ Requirements:
       solve,
       practice,
       resources,
-      selectedVideo: selectedVideo ?? null,
+      videos,
       skillName,
       date,
     });
